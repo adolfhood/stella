@@ -1,102 +1,200 @@
-import Image from "next/image";
+"use client";
+
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+import Link from "next/link"; // Import Link
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [email, setEmail] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    alert(`Submitting email: ${email}`);
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
+      {/* Header */}
+      <header className="bg-white shadow-md py-6">
+        <div className="container mx-auto px-4 flex items-center justify-between">
+          <a href="#" className="text-2xl font-semibold text-indigo-700">
+            <span className="text-3xl mr-2">⭐</span> Stella
           </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          <nav>
+            <ul className="flex space-x-6">
+              <li>
+                <a href="#features" className="hover:text-indigo-500">
+                  Features
+                </a>
+              </li>
+              <li>
+                <a href="#pricing" className="hover:text-indigo-500">
+                  Pricing
+                </a>
+              </li>
+              <li>
+                <a href="#contact" className="hover:text-indigo-500">
+                  Contact
+                </a>
+              </li>
+              <li>{/* Add Login Link */}
+                <Link href="/login" className="hover:text-indigo-500">
+                  Login
+                </Link>
+              </li>
+            </ul>
+          </nav>
         </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-blue-50 to-white py-20">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
+            Supercharge Your Productivity with Stella
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            Your friendly daily task bot, designed to keep you organized and
+            motivated.
+          </p>
+          <Button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">
+            Get Started Now
+          </Button>
+        </div>
+      </section>
+
+      {/* Main Content */}
+      <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
+        <Card className="w-full max-w-md shadow-xl rounded-lg">
+          <CardHeader className="py-6">
+            <CardTitle className="text-2xl font-bold text-center">
+              Stay Updated with Stella!
+            </CardTitle>
+            <CardDescription className="text-gray-500 text-center">
+              Subscribe to our newsletter for the latest updates and tips.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-left text-gray-700">
+                  Email Address
+                </Label>
+                <Input
+                  id="email"
+                  placeholder="m@example.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+              </div>
+              <Button className="bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">
+                Subscribe
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+        <section id="features" className="mt-16">
+          <h2 className="text-3xl font-semibold mb-8 text-center">
+            Key Features
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Feature Cards (Example) */}
+            <div className="p-4 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold mb-2">Daily Reminders</h3>
+              <p className="text-gray-600">
+                Get personalized reminders to keep you on track.
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold mb-2">Task Management</h3>
+              <p className="text-gray-600">
+                Easily create, update, and prioritize your tasks.
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold mb-2">Discord Integration</h3>
+              <p className="text-gray-600">
+                Manage your tasks directly from Discord.
+              </p>
+            </div>
+            <div className="p-4 bg-white rounded-lg shadow-md">
+              <h3 className="text-xl font-semibold mb-2">Customizable Settings</h3>
+              <p className="text-gray-600">
+                Tailor Stella to fit your unique workflow.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section id="pricing" className="mt-16">
+          <h2 className="text-3xl font-semibold mb-8 text-center">
+            Pricing
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Pricing Tiers (Example) */}
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-2xl font-semibold mb-4">Free</h3>
+              <p className="text-gray-600 mb-4">
+                Basic features for getting started.
+              </p>
+              <p className="text-4xl font-bold text-indigo-700">$0</p>
+              <Button className="mt-4 bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">
+                Get Started
+              </Button>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md border-2 border-indigo-500">
+              <h3 className="text-2xl font-semibold mb-4">Pro</h3>
+              <p className="text-gray-600 mb-4">
+                Advanced features for power users.
+              </p>
+              <p className="text-4xl font-bold text-indigo-700">$9.99</p>
+              <Button className="mt-4 bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">
+                Upgrade Now
+              </Button>
+            </div>
+            <div className="p-6 bg-white rounded-lg shadow-md">
+              <h3 className="text-2xl font-semibold mb-4">Enterprise</h3>
+              <p className="text-gray-600 mb-4">
+                Custom solutions for large teams.
+              </p>
+              <p className="text-4xl font-bold text-indigo-700">Contact Us</p>
+              <Button className="mt-4 bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75">
+                Contact Us
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Contact Section */}
+      <section id="contact" className="bg-gray-100 py-16">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-semibold mb-8">Contact Us</h2>
+          <p className="text-gray-600 mb-4">
+            Have questions? We'd love to hear from you!
+          </p>
+          <Button className="bg-indigo-600 text-white font-bold py-3 px-8 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75">
+            Contact Support
+          </Button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-white text-center py-4 shadow-inner">
+        <p className="text-gray-600">
+          &copy; {new Date().getFullYear()} Stella. All rights reserved.
+        </p>
       </footer>
     </div>
   );
