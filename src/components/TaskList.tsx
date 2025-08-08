@@ -48,6 +48,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 type Task = {
   id: string;
@@ -87,11 +88,17 @@ export default function TaskList() {
 
       if (error) {
         console.error("Error fetching tasks:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error fetching the tasks.",
+        });
       } else {
         setTasks(data || []);
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error fetching the tasks.",
+      });
     }
   };
 
@@ -100,17 +107,32 @@ export default function TaskList() {
 
     const { data } = await supabase.auth.getSession();
 
+    // Combine date and time
+    let combinedDateTime: string | null = null;
+    if (newTaskDueDate && newTaskDueTime) {
+      const [hours, minutes] = newTaskDueTime.split(":");
+      const newDate = new Date(newTaskDueDate);
+      newDate.setHours(parseInt(hours));
+      newDate.setMinutes(parseInt(minutes));
+      combinedDateTime = newDate.toISOString();
+    } else if (newTaskDueDate) {
+      combinedDateTime = newTaskDueDate.toISOString();
+    }
+
     try {
       const { error } = await supabase.from("tasks").insert({
         title: newTaskTitle,
         description: newTaskDescription,
-        due_date: newTaskDueDate ? newTaskDueDate.toISOString() : null,
+        due_date: combinedDateTime,
         due_time: newTaskDueTime,
         user_id: data.session?.user.id,
       });
 
       if (error) {
         console.error("Error adding task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error adding the task.",
+        });
       } else {
         setNewTaskTitle("");
         setNewTaskDescription("");
@@ -118,9 +140,15 @@ export default function TaskList() {
         setNewTaskDueTime(undefined);
         setOpen(false);
         fetchTasks(); // Refresh task list
+        toast.success("Task added successfully!", {
+          description: "The task has been added to your list.",
+        });
       }
     } catch (error) {
       console.error("Error adding task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error adding the task.",
+      });
     } finally {
       setLoading(false);
     }
@@ -132,11 +160,20 @@ export default function TaskList() {
 
       if (error) {
         console.error("Error deleting task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error deleting the task.",
+        });
       } else {
         fetchTasks(); // Refresh task list
+        toast.success("Task deleted successfully!", {
+          description: "The task has been deleted from your list.",
+        });
       }
     } catch (error) {
       console.error("Error deleting task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error deleting the task.",
+      });
     } finally {
       setDeleteOpen(false);
       setDeleteTaskId(null);
@@ -156,26 +193,48 @@ export default function TaskList() {
     dueTime: string | null
   ) => {
     setLoading(true);
+
+    // Combine date and time
+    let combinedDateTime: string | null = null;
+    if (dueDate && dueTime) {
+      const [hours, minutes] = dueTime.split(":");
+      const newDate = new Date(dueDate);
+      newDate.setHours(parseInt(hours));
+      newDate.setMinutes(parseInt(minutes));
+      combinedDateTime = newDate.toISOString();
+    } else if (dueDate) {
+      combinedDateTime = dueDate.toISOString();
+    }
+
     try {
       const { error } = await supabase
         .from("tasks")
         .update({
           title: title,
           description: description,
-          due_date: dueDate ? dueDate.toISOString() : null,
+          due_date: combinedDateTime,
           due_time: dueTime,
         })
         .eq("id", taskId);
 
       if (error) {
         console.error("Error editing task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error editing the task.",
+        });
       } else {
         setEditOpen(false);
         setEditTask(null);
         fetchTasks();
+        toast.success("Task edited successfully!", {
+          description: "The task has been updated in your list.",
+        });
       }
     } catch (error) {
       console.error("Error editing task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error editing the task.",
+      });
     } finally {
       setLoading(false);
     }
@@ -185,18 +244,6 @@ export default function TaskList() {
     setEditOpen(false);
     setEditTask(null);
   };
-
-  function getTimeOptions() {
-    const times = [];
-    for (let i = 0; i < 24; i++) {
-      for (let j = 0; j < 60; j += 30) {
-        const hour = i.toString().padStart(2, "0");
-        const minute = j.toString().padStart(2, "0");
-        times.push(`${hour}:${minute}`);
-      }
-    }
-    return times;
-  }
 
   return (
     <div className="container mx-auto py-10">
@@ -267,8 +314,9 @@ export default function TaskList() {
                         mode="single"
                         selected={newTaskDueDate}
                         onSelect={setNewTaskDueDate}
-                        disabled={(date) => date < new Date()}
-                        initialFocus
+                        disabled={(date) =>
+                          date < new Date(new Date().toDateString())
+                        }
                       />
                     </PopoverContent>
                   </Popover>
@@ -277,31 +325,13 @@ export default function TaskList() {
                   <Label htmlFor="time" className="text-right">
                     Time
                   </Label>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !newTaskDueTime && "text-muted-foreground"
-                        )}
-                      >
-                        {newTaskDueTime ? newTaskDueTime : "Pick a time"}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>Select a time</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {getTimeOptions().map((time) => (
-                        <DropdownMenuItem
-                          key={time}
-                          onSelect={() => setNewTaskDueTime(time)}
-                        >
-                          {time}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <Input
+                    type="time"
+                    id="time"
+                    value={newTaskDueTime}
+                    onChange={(e) => setNewTaskDueTime(e.target.value)}
+                    className="col-span-3"
+                  />
                 </div>
               </div>
               <Button onClick={handleAddTask} disabled={loading}>
@@ -317,7 +347,6 @@ export default function TaskList() {
                 <TableHead className="w-[100px]">Title</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Due Date</TableHead>
-                <TableHead>Due Time</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -328,10 +357,9 @@ export default function TaskList() {
                   <TableCell>{task.description}</TableCell>
                   <TableCell>
                     {task.due_date
-                      ? new Date(task.due_date).toLocaleDateString()
+                      ? new Date(task.due_date).toLocaleString()
                       : "No Due Date"}
                   </TableCell>
-                  <TableCell>{task.due_time || "No Due Time"}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
@@ -485,7 +513,7 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
               mode="single"
               selected={dueDate}
               onSelect={setDueDate}
-              disabled={(date) => date < new Date()}
+              disabled={(date) => date < new Date(new Date().toDateString())}
               initialFocus
             />
           </PopoverContent>
@@ -495,28 +523,13 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
         <Label htmlFor="time" className="text-right">
           Time
         </Label>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !dueTime && "text-muted-foreground"
-              )}
-            >
-              {dueTime ? dueTime : "Pick a time"}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56">
-            <DropdownMenuLabel>Select a time</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {getTimeOptions().map((time) => (
-              <DropdownMenuItem key={time} onSelect={() => setDueTime(time)}>
-                {time}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Input
+          type="time"
+          id="time"
+          value={dueTime as any}
+          onChange={(e) => setDueTime(e.target.value)}
+          className="col-span-3"
+        />
       </div>
 
       <div className="flex justify-end space-x-2">
