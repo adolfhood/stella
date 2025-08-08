@@ -22,9 +22,8 @@ export default function HomePage() {
 
   async function handleSignOut() {
     await supabase.auth.signOut();
-    router.push('/login');
+    router.push("/login");
   }
-
 
   if (!session) {
     return <p>Loading...</p>;
@@ -56,7 +55,9 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
-                <Button onClick={handleSignOut} variant="ghost">Sign Out</Button>
+                <Button onClick={handleSignOut} variant="ghost">
+                  Sign Out
+                </Button>
               </li>
             </ul>
           </nav>
@@ -73,7 +74,6 @@ export default function HomePage() {
             Your friendly daily task bot, designed to keep you organized and
             motivated.
           </p>
-
         </div>
       </section>
 

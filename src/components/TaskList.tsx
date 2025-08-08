@@ -49,6 +49,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Task = {
   id: string;
@@ -56,6 +63,7 @@ type Task = {
   description: string | null;
   due_date: string | null;
   due_time: string | null;
+  status: string; // Add status
 };
 
 export default function TaskList() {
@@ -74,6 +82,7 @@ export default function TaskList() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [newTaskStatus, setNewTaskStatus] = useState("open");
 
   useEffect(() => {
     fetchTasks();
@@ -126,6 +135,7 @@ export default function TaskList() {
         due_date: combinedDateTime,
         due_time: newTaskDueTime,
         user_id: data.session?.user.id,
+        status: newTaskStatus,
       });
 
       if (error) {
@@ -138,6 +148,7 @@ export default function TaskList() {
         setNewTaskDescription("");
         setNewTaskDueDate(undefined);
         setNewTaskDueTime(undefined);
+        setNewTaskStatus("open");
         setOpen(false);
         fetchTasks(); // Refresh task list
         toast.success("Task added successfully!", {
@@ -190,7 +201,8 @@ export default function TaskList() {
     title: string,
     description: string | null,
     dueDate: Date | undefined,
-    dueTime: string | null
+    dueTime: string | null,
+    status: string
   ) => {
     setLoading(true);
 
@@ -214,6 +226,7 @@ export default function TaskList() {
           description: description,
           due_date: combinedDateTime,
           due_time: dueTime,
+          status: status,
         })
         .eq("id", taskId);
 
@@ -237,6 +250,31 @@ export default function TaskList() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveStatus = async (taskId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          status: status,
+        })
+        .eq("id", taskId);
+
+      if (error) {
+        console.error("Error editing task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error editing the task.",
+        });
+      } else {
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error editing the task.",
+      });
     }
   };
 
@@ -333,6 +371,25 @@ export default function TaskList() {
                     className="col-span-3"
                   />
                 </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="status" className="text-right">
+                    Status
+                  </Label>
+                  <Select
+                    value={newTaskStatus}
+                    onValueChange={setNewTaskStatus}
+                  >
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select a status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Button onClick={handleAddTask} disabled={loading}>
                 Add
@@ -347,6 +404,7 @@ export default function TaskList() {
                 <TableHead className="w-[100px]">Title</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -360,11 +418,29 @@ export default function TaskList() {
                       ? new Date(task.due_date).toLocaleString()
                       : "No Due Date"}
                   </TableCell>
+                  <TableCell>
+                    <Select
+                      value={task.status}
+                      onValueChange={(status) =>
+                        handleSaveStatus(task.id, status)
+                      }
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select a status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditTask(task)}
+                      onClick={() =>
+                        handleEditTask({ ...task, status: task.status })
+                      }
                     >
                       Edit
                     </Button>
@@ -440,7 +516,8 @@ type EditTaskFormProps = {
     title: string,
     description: string | null,
     dueDate: Date | undefined,
-    dueTime: string | null
+    dueTime: string | null,
+    status: string
   ) => void;
   onCancel: () => void;
   loading: boolean;
@@ -453,6 +530,7 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
     task.due_date ? new Date(task.due_date) : undefined
   );
   const [dueTime, setDueTime] = useState<string | null>(task.due_time);
+  const [status, setStatus] = useState(task.status);
 
   function getTimeOptions() {
     const times = [];
@@ -531,13 +609,31 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
           className="col-span-3"
         />
       </div>
+      {/* <div className="grid grid-cols-4 items-center gap-4">
+        <Label htmlFor="status" className="text-right">
+          Status
+        </Label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="col-span-3">
+            <SelectValue placeholder="Select a status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="open">Open</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div> */}
 
       <div className="flex justify-end space-x-2">
         <Button variant="secondary" onClick={onCancel} disabled={loading}>
           Cancel
         </Button>
         <Button
-          onClick={() => onSave(task.id, title, description, dueDate, dueTime)}
+          onClick={() =>
+            onSave(task.id, title, description, dueDate, dueTime, status)
+          }
           disabled={loading}
         >
           Save
