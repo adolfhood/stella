@@ -5,6 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import TaskList from "@/components/TaskList";
 import { Button } from "@/components/ui/button";
+import TaskCalendar from "@/components/TaskCalendar";
+import WeeklyTaskList from "@/components/WeeklyTaskList";
+import DailyTaskList from "@/components/DailyTaskList";
 
 export default function HomePage() {
   const [session, setSession] = useState<any>(null);
@@ -80,6 +83,9 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
         <TaskList />
+        <TaskCalendar />
+        <WeeklyTaskList />
+        <DailyTaskList selectedDate={new Date()} />
       </main>
 
       {/* Footer */}

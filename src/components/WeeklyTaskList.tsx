@@ -1,0 +1,122 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import {
+  format,
+  startOfWeek,
+  addDays,
+  isSameDay,
+  parseISO,
+  subWeeks,
+} from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
+
+type Task = {
+  id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  due_time: string | null;
+  status: string;
+};
+
+export default function WeeklyTaskList() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentWeekStartDate, setCurrentWeekStartDate] = useState<Date>(
+    startOfWeek(new Date(), { weekStartsOn: 0 })
+  );
+  const [currentWeek, setCurrentWeek] = useState<Date[]>([]);
+
+  useEffect(() => {
+    fetchTasks();
+    calculateCurrentWeek();
+  }, [currentWeekStartDate]); // Recalculate week when start date changes
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching tasks:", error);
+      } else {
+        const parsedTasks =
+          data?.map((task) => ({
+            ...task,
+            due_date: task.due_date
+              ? parseISO(task.due_date).toISOString()
+              : null,
+          })) || [];
+        setTasks(parsedTasks);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+  const calculateCurrentWeek = () => {
+    const week = Array.from({ length: 7 }, (_, i) =>
+      addDays(currentWeekStartDate, i)
+    );
+    setCurrentWeek(week);
+  };
+
+  const getTasksForDate = (date: Date) => {
+    return tasks.filter(
+      (task) => task.due_date && isSameDay(new Date(task.due_date), date)
+    );
+  };
+
+  const goToPreviousWeek = () => {
+    setCurrentWeekStartDate(subWeeks(currentWeekStartDate, 1));
+  };
+
+  const goToNextWeek = () => {
+    setCurrentWeekStartDate(addDays(currentWeekStartDate, 7));
+  };
+
+  return (
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
+            <ChevronLeftIcon className="h-4 w-4" />
+          </Button>
+          <CardTitle className="text-center">
+            {format(currentWeekStartDate, "MMMM yyyy")}
+          </CardTitle>
+          <Button variant="outline" size="icon" onClick={goToNextWeek}>
+            <ChevronRightIcon className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent className="grid grid-cols-7 gap-4">
+          {currentWeek.map((date) => (
+            <div key={date.toISOString()} className="border rounded-md p-2">
+              <h3 className="text-sm font-semibold mb-1 text-center">
+                {format(date, "EEE d")}
+              </h3>
+              {getTasksForDate(date).length > 0 ? (
+                <ul className="list-disc pl-5 text-sm">
+                  {getTasksForDate(date).map((task) => (
+                    <li key={task.id} className="mb-0.5">
+                      {task.title}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  No tasks
+                </p>
+              )}
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
