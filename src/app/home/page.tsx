@@ -58,6 +58,11 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
+                <a href="/settings" className="hover:text-indigo-500">
+                  Settings
+                </a>
+              </li>
+              <li>
                 <Button onClick={handleSignOut} variant="ghost">
                   Sign Out
                 </Button>

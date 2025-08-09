@@ -96,13 +96,27 @@ async function fetchTasks() {
   return tasks;
 }
 
+// Function to fetch user settings from Supabase
+async function fetchUserSettings(userId: string) {
+  const { data, error } = await supabase
+    .from("user_settings")
+    .select("selected_character")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching user settings:", error);
+    return null;
+  }
+
+  return data;
+}
+
 // Function to generate a creative reminder using the Gemini API
 async function generateCreativeReminder(
   taskName: string,
   characterIndex: number
 ): Promise<string> {
-  // const prompt = `Create a short, creative, and slightly humorous reminder that the user should complete the task "${taskName}" which is due soon. Try to be motivational but not too serious. Limit to 1 sentence`;
-
   const prompt =
     characterPrompts[characterIndex].prompt.replace("[taskName]", taskName) +
     "Keep it brief and engaging.";
@@ -172,11 +186,18 @@ async function main() {
   console.log("Fetching tasks from Supabase...");
   const tasks = await fetchTasks();
 
-  const selectedCharacterIndex = Math.floor(
-    Math.random() * characterPrompts.length
-  );
-
   for (const task of tasks) {
+    const userId = task.user_id;
+
+    const userSettings = await fetchUserSettings(userId);
+
+    let selectedCharacterIndex = 0; // Default to Professor Promptly
+    if (userSettings && userSettings.selected_character) {
+      selectedCharacterIndex = parseInt(userSettings.selected_character, 10);
+    } else {
+      console.log("No user settings found, defaulting to Professor Promptly");
+    }
+
     const creativeReminder = await generateCreativeReminder(
       task.title,
       selectedCharacterIndex
