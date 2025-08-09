@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "scm": "npx supabase migration new",
+    "sdp": "npx supabase db push",
+    "cron": "node ./src/lib/discord-bot/index.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
