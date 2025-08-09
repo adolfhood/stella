@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import Link from "next/link"; // Import Link
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -24,37 +26,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
       {/* Header */}
-      <header className="bg-white shadow-md py-6">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <a href="#" className="text-2xl font-semibold text-indigo-700">
-            <span className="text-3xl mr-2">⭐</span> Stella
-          </a>
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <a href="#features" className="hover:text-indigo-500">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-indigo-500">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-indigo-500">
-                  Contact
-                </a>
-              </li>
-              <li>{/* Add Login Link */}
-                <Link href="/login" className="hover:text-indigo-500">
-                  Login
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-50 to-white py-20">
@@ -123,13 +95,17 @@ export default function Home() {
               </p>
             </div>
             <div className="p-4 bg-white rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold mb-2">Discord Integration</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Discord Integration
+              </h3>
               <p className="text-gray-600">
                 Manage your tasks directly from Discord.
               </p>
             </div>
             <div className="p-4 bg-white rounded-lg shadow-md">
-              <h3 className="text-xl font-semibold mb-2">Customizable Settings</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Customizable Settings
+              </h3>
               <p className="text-gray-600">
                 Tailor Stella to fit your unique workflow.
               </p>
@@ -138,9 +114,7 @@ export default function Home() {
         </section>
 
         <section id="pricing" className="mt-16">
-          <h2 className="text-3xl font-semibold mb-8 text-center">
-            Pricing
-          </h2>
+          <h2 className="text-3xl font-semibold mb-8 text-center">Pricing</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Pricing Tiers (Example) */}
             <div className="p-6 bg-white rounded-lg shadow-md">
@@ -191,11 +165,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-white text-center py-4 shadow-inner">
-        <p className="text-gray-600">
-          &copy; {new Date().getFullYear()} Stella. All rights reserved.
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

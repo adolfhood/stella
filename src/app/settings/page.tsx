@@ -12,6 +12,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const characterOptions = [
   { value: "0", label: "Professor Promptly" },
@@ -124,23 +126,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
-      {/* Header */}
-      <header className="bg-white shadow-md py-6">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <a href="/" className="text-2xl font-semibold text-indigo-700">
-            <span className="text-3xl mr-2">⭐</span> Stella
-          </a>
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <Button onClick={handleSignOut} variant="ghost">
-                  Sign Out
-                </Button>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
@@ -184,11 +170,7 @@ export default function SettingsPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white text-center py-4 shadow-inner">
-        <p className="text-gray-600">
-          &copy; {new Date().getFullYear()} Stella. All rights reserved.
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

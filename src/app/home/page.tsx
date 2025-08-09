@@ -17,6 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 type Task = {
   id: string;
@@ -84,40 +86,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-100 text-gray-800">
-      {/* App Bar */}
-      <header className="bg-white shadow h-16 flex items-center justify-between px-4">
-        <h1 className="text-xl font-semibold">
-          <span className="text-2xl mr-2">⭐</span> Stella
-        </h1>
-
-        {/* User Menu */}
-        <Popover>
-          <PopoverTrigger>
-            <Avatar className="cursor-pointer">
-              <AvatarImage src={session.user.user_metadata?.avatar_url} />
-              <AvatarFallback>
-                {session.user.email?.[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </PopoverTrigger>
-          <PopoverContent className="w-48">
-            <div className="px-2 py-1">
-              <p className="text-sm font-medium text-gray-800">
-                {session.user.email}
-              </p>
-            </div>
-            <div className="py-1">
-              <Button
-                variant="ghost"
-                onClick={handleSignOut}
-                className="w-full justify-start"
-              >
-                Sign Out
-              </Button>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </header>
+      <Header />
 
       {/* Main Content Area */}
       <main className="flex-1 p-6">
@@ -156,9 +125,7 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 text-center py-4 shadow-inner text-gray-600">
-        <p>&copy; {new Date().getFullYear()} Stella. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
