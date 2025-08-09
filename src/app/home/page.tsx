@@ -9,6 +9,14 @@ import TaskCalendar from "@/components/TaskCalendar";
 import WeeklyTaskList from "@/components/WeeklyTaskList";
 import DailyTaskList from "@/components/DailyTaskList";
 import { parseISO } from "date-fns";
+import { CalendarIcon, ListChecks } from "lucide-react"; // Import icons
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Import Tabs
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Import Avatar
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Task = {
   id: string;
@@ -75,53 +83,81 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-gray-50 to-blue-100">
-      {/* Header */}
-      <header className="bg-white shadow-md py-6">
-        <div className="container mx-auto px-4 flex items-center justify-between">
-          <a href="#" className="text-2xl font-semibold text-indigo-700">
-            <span className="text-3xl mr-2">⭐</span> Stella
-          </a>
-          <nav>
-            <ul className="flex space-x-6">
-              <li>
-                <a href="#features" className="hover:text-indigo-500">
-                  Features
-                </a>
-              </li>
-              <li>
-                <a href="#pricing" className="hover:text-indigo-500">
-                  Pricing
-                </a>
-              </li>
-              <li>
-                <a href="#contact" className="hover:text-indigo-500">
-                  Contact
-                </a>
-              </li>
-              <li>
-                <Button onClick={handleSignOut} variant="ghost">
-                  Sign Out
-                </Button>
-              </li>
-            </ul>
-          </nav>
-        </div>
+    <div className="flex flex-col min-h-screen bg-gray-100 text-gray-800">
+      {/* App Bar */}
+      <header className="bg-white shadow h-16 flex items-center justify-between px-4">
+        <h1 className="text-xl font-semibold">
+          <span className="text-2xl mr-2">⭐</span> Stella
+        </h1>
+
+        {/* User Menu */}
+        <Popover>
+          <PopoverTrigger>
+            <Avatar className="cursor-pointer">
+              <AvatarImage src={session.user.user_metadata?.avatar_url} />
+              <AvatarFallback>
+                {session.user.email?.[0].toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </PopoverTrigger>
+          <PopoverContent className="w-48">
+            <div className="px-2 py-1">
+              <p className="text-sm font-medium text-gray-800">
+                {session.user.email}
+              </p>
+            </div>
+            <div className="py-1">
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="w-full justify-start"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </header>
 
-      {/* Main Content */}
-      <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
-        <TaskList />
-        <TaskCalendar tasks={tasks} />
-        <WeeklyTaskList tasks={tasks} />
-        <DailyTaskList selectedDate={selectedDate} tasks={tasks} />
+      {/* Main Content Area */}
+      <main className="flex-1 p-6">
+        <Tabs defaultValue="tasks" className="w-full">
+          <TabsList>
+            <TabsTrigger value="tasks">
+              <ListChecks className="mr-2 h-4 w-4" />
+              Tasks
+            </TabsTrigger>
+            <TabsTrigger value="calendar">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger value="weekly">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Weekly
+            </TabsTrigger>
+            <TabsTrigger value="daily">
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              Daily
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="tasks" className="mt-4">
+            <TaskList />
+          </TabsContent>
+          <TabsContent value="calendar" className="mt-4">
+            <TaskCalendar tasks={tasks} />
+          </TabsContent>
+          <TabsContent value="weekly" className="mt-4">
+            <WeeklyTaskList tasks={tasks} />
+          </TabsContent>
+          <TabsContent value="daily" className="mt-4">
+            <DailyTaskList selectedDate={selectedDate} tasks={tasks} />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white text-center py-4 shadow-inner">
-        <p className="text-gray-600">
-          &copy; {new Date().getFullYear()} Stella. All rights reserved.
-        </p>
+      <footer className="bg-gray-50 text-center py-4 shadow-inner text-gray-600">
+        <p>&copy; {new Date().getFullYear()} Stella. All rights reserved.</p>
       </footer>
     </div>
   );
