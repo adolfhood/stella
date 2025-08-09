@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 type Task = {
@@ -16,40 +15,14 @@ type Task = {
   status: string;
 };
 
-export default function TaskCalendar() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+interface TaskCalendarProps {
+  tasks: Task[]; // Tasks are now passed as props
+}
+
+export default function TaskCalendar({ tasks }: TaskCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching tasks:", error);
-      } else {
-        // Ensure due_date is parsed as a Date object
-        const parsedTasks =
-          data?.map((task) => ({
-            ...task,
-            due_date: task.due_date
-              ? parseISO(task.due_date).toISOString()
-              : null, // Keep it ISO string for comparison
-          })) || [];
-        setTasks(parsedTasks);
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);

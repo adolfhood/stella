@@ -8,10 +8,24 @@ import { Button } from "@/components/ui/button";
 import TaskCalendar from "@/components/TaskCalendar";
 import WeeklyTaskList from "@/components/WeeklyTaskList";
 import DailyTaskList from "@/components/DailyTaskList";
+import { parseISO } from "date-fns";
+
+type Task = {
+  id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  due_time: string | null;
+  status: string; // Add status
+};
 
 export default function HomePage() {
   const [session, setSession] = useState<any>(null);
   const router = useRouter();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -22,6 +36,34 @@ export default function HomePage() {
       setSession(session);
     });
   }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching tasks:", error);
+      } else {
+        const parsedTasks =
+          data?.map((task) => ({
+            ...task,
+            due_date: task.due_date
+              ? parseISO(task.due_date).toISOString()
+              : null,
+          })) || [];
+        setTasks(parsedTasks);
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
 
   async function handleSignOut() {
     await supabase.auth.signOut();
@@ -58,11 +100,6 @@ export default function HomePage() {
                 </a>
               </li>
               <li>
-                <a href="/settings" className="hover:text-indigo-500">
-                  Settings
-                </a>
-              </li>
-              <li>
                 <Button onClick={handleSignOut} variant="ghost">
                   Sign Out
                 </Button>
@@ -72,25 +109,12 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-50 to-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
-            Manage Your Tasks with Stella
-          </h1>
-          <p className="text-lg text-gray-600 mb-8">
-            Your friendly daily task bot, designed to keep you organized and
-            motivated.
-          </p>
-        </div>
-      </section>
-
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
         <TaskList />
-        <TaskCalendar />
-        <WeeklyTaskList />
-        <DailyTaskList selectedDate={new Date()} />
+        <TaskCalendar tasks={tasks} />
+        <WeeklyTaskList tasks={tasks} />
+        <DailyTaskList selectedDate={selectedDate} tasks={tasks} />
       </main>
 
       {/* Footer */}

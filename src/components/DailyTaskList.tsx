@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 import { format, isSameDay, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -16,39 +14,10 @@ type Task = {
 
 interface DailyTaskListProps {
   selectedDate: Date | undefined;
+  tasks: Task[]; // Tasks are now passed as props
 }
 
-export default function DailyTaskList({ selectedDate }: DailyTaskListProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [selectedDate]);
-
-  const fetchTasks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching tasks:", error);
-      } else {
-        const parsedTasks =
-          data?.map((task) => ({
-            ...task,
-            due_date: task.due_date
-              ? parseISO(task.due_date).toISOString()
-              : null,
-          })) || [];
-        setTasks(parsedTasks);
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-
+export default function DailyTaskList({ selectedDate, tasks }: DailyTaskListProps) {
   const getTasksForDate = (date: Date | undefined) => {
     if (!date) return [];
 
