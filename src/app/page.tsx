@@ -82,19 +82,19 @@ export default function Home() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Feature Cards (Example) */}
-            <div className="p-4 bg-white rounded-lg shadow-md">
+            <div className="p-4  rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-2">Daily Reminders</h3>
               <p className="text-gray-600">
                 Get personalized reminders to keep you on track.
               </p>
             </div>
-            <div className="p-4 bg-white rounded-lg shadow-md">
+            <div className="p-4  rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-2">Task Management</h3>
               <p className="text-gray-600">
                 Easily create, update, and prioritize your tasks.
               </p>
             </div>
-            <div className="p-4 bg-white rounded-lg shadow-md">
+            <div className="p-4  rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-2">
                 Discord Integration
               </h3>
@@ -102,7 +102,7 @@ export default function Home() {
                 Manage your tasks directly from Discord.
               </p>
             </div>
-            <div className="p-4 bg-white rounded-lg shadow-md">
+            <div className="p-4  rounded-lg shadow-md">
               <h3 className="text-xl font-semibold mb-2">
                 Customizable Settings
               </h3>
@@ -117,7 +117,7 @@ export default function Home() {
           <h2 className="text-3xl font-semibold mb-8 text-center">Pricing</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Pricing Tiers (Example) */}
-            <div className="p-6 bg-white rounded-lg shadow-md">
+            <div className="p-6  rounded-lg shadow-md">
               <h3 className="text-2xl font-semibold mb-4">Free</h3>
               <p className="text-gray-600 mb-4">
                 Basic features for getting started.
@@ -127,7 +127,7 @@ export default function Home() {
                 Get Started
               </Button>
             </div>
-            <div className="p-6 bg-white rounded-lg shadow-md border-2 border-indigo-500">
+            <div className="p-6  rounded-lg shadow-md border-2 border-indigo-500">
               <h3 className="text-2xl font-semibold mb-4">Pro</h3>
               <p className="text-gray-600 mb-4">
                 Advanced features for power users.
@@ -137,7 +137,7 @@ export default function Home() {
                 Upgrade Now
               </Button>
             </div>
-            <div className="p-6 bg-white rounded-lg shadow-md">
+            <div className="p-6  rounded-lg shadow-md">
               <h3 className="text-2xl font-semibold mb-4">Enterprise</h3>
               <p className="text-gray-600 mb-4">
                 Custom solutions for large teams.

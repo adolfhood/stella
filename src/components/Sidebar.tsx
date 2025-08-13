@@ -29,7 +29,6 @@ export default function Sidebar({ className, ...props }: any) {
         "w-64 min-h-screen p-4 bg-gray-50 border-r flex flex-col",
         className
       )}
-      {...props}
     >
       <div className="mb-8 flex justify-between items-center">
         <p className="text-xl font-semibold flex items-center space-x-1">

@@ -19,6 +19,20 @@ interface TaskCalendarProps {
   tasks: Task[]; // Tasks are now passed as props
 }
 
+const statusColors = {
+  open: "bg-gray-50 text-gray-700",
+  in_progress: "bg-blue-50 text-blue-700",
+  completed: "bg-green-50 text-green-700",
+  cancelled: "bg-red-50 text-red-700",
+};
+
+const statusBorderColors = {
+  open: "border-gray-300",
+  in_progress: "border-blue-300",
+  completed: "border-green-300",
+  cancelled: "border-red-300",
+};
+
 export default function TaskCalendar({ tasks }: TaskCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
@@ -34,81 +48,131 @@ export default function TaskCalendar({ tasks }: TaskCalendarProps) {
     );
   };
 
-  const DayContent = ({ date }: { date: Date }) => {
+  const DayContent = ({
+    date,
+    setSelectedDate,
+  }: {
+    date: Date;
+    setSelectedDate: (date: Date) => void;
+  }) => {
     const tasksForDate = getTasksForDate(date);
     const dayNumber = date.getDate();
 
     return (
-      <div
+      <td
         className="grow w-[calc(100%/7)] flex flex-col align-center p-1 rounded-md hover:bg-secondary hover:text-secondary-foreground transition-colors"
         style={{ aspectRatio: "16/9" }}
+        onClick={() => setSelectedDate(date)}
       >
         {/* Day Number */}
-        <div className="text-sm font-medium text-gray-600 w-full text-center">
+        <span className="text-sm font-medium text-gray-600 w-full text-center">
           {dayNumber}
-        </div>
+        </span>
 
         {/* Task Badges */}
         {tasksForDate.length > 0 && (
-          <div className="w-full flex flex-col items-center justify-center mt-1">
+          <span className="w-full flex flex-col items-center justify-center mt-1">
             {tasksForDate.slice(0, 2).map((task) => (
-              <div
+              <span
                 key={task.id}
                 className="bg-secondary text-secondary-foreground rounded-md px-1 py-0.5 text-[0.6rem] mb-0.5 w-full text-center overflow-hidden text-ellipsis whitespace-nowrap"
                 title={task.title}
               >
                 {task.title}
-              </div>
+              </span>
             ))}
             {tasksForDate.length > 2 && (
-              <div className="bg-muted text-muted-foreground rounded-md px-1 py-0.5 text-[0.6rem]">
+              <span className="bg-muted text-muted-foreground rounded-md px-1 py-0.5 text-[0.6rem]">
                 +{tasksForDate.length - 2} more
-              </div>
+              </span>
             )}
-          </div>
+          </span>
         )}
-      </div>
+      </td>
     );
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Task Calendar</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            className="rounded-md border w-4/5 mx-auto"
-            components={{
-              Day: ({ day, modifiers }) => (
-                <DayContent date={new Date(day.date)} />
-              ),
-            }}
-          />
-          {selectedDate && (
+    <div className="container mx-auto py-2 px-4">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        Task Calendar
+      </h2>
+      <Calendar
+        mode="single"
+        selected={selectedDate}
+        onSelect={handleDateSelect}
+        className="rounded-md border w-full md:w-4/5 mb-4 mx-auto"
+        components={{
+          Day: ({ day, modifiers }) => (
+            <DayContent
+              date={new Date(day.date)}
+              setSelectedDate={setSelectedDate}
+            />
+          ),
+        }}
+      />
+      {selectedDate && (
+        <div className="text-center w-full md:w-4/5 mb-4 mx-auto">
+          <h3 className="text-lg font-semibold mb-2">
+            Tasks for {format(selectedDate, "PPP")}:
+          </h3>
+          {getTasksForDate(selectedDate).length > 0 ? (
             <div>
-              <h3 className="text-lg font-semibold mb-2">
-                Tasks for {format(selectedDate, "PPP")}:
-              </h3>
-              {getTasksForDate(selectedDate).length > 0 ? (
-                <ul className="list-disc pl-5">
-                  {getTasksForDate(selectedDate).map((task) => (
-                    <li key={task.id} className="mb-1">
-                      {task.title} - {task.status}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground">No tasks for this day.</p>
-              )}
+              {getTasksForDate(selectedDate).map((task) => (
+                <Card
+                  key={task.id}
+                  className={`border-2 ${
+                    statusBorderColors[
+                      task.status as keyof typeof statusBorderColors
+                    ]
+                  } ${statusColors[task.status as keyof typeof statusColors]}`}
+                >
+                  <CardContent className="px-4">
+                    <div className="flex flex-col gap-2 items-center relative">
+                      <div className="col-span-3">
+                        <p
+                          className={`${
+                            statusColors[
+                              task.status as keyof typeof statusColors
+                            ]
+                          } bg-none`}
+                        >
+                          {task.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {task.description || "No description"}
+                        </p>
+                        {task.due_date && (
+                          <p className="text-xs text-muted-foreground">
+                            Due: {new Date(task.due_date).toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex justify-center">
+                        <div
+                          className={`${
+                            statusBorderColors[
+                              task.status as keyof typeof statusBorderColors
+                            ]
+                          } ${
+                            statusColors[
+                              task.status as keyof typeof statusColors
+                            ]
+                          } text-xs border-1 w-max px-4 py-1 rounded-xl`}
+                        >
+                          {task.status[0].toUpperCase() + task.status.slice(1)}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
+          ) : (
+            <p className="text-muted-foreground">No tasks for this day.</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

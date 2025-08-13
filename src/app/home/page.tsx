@@ -89,36 +89,48 @@ export default function HomePage() {
       <Header />
 
       {/* Main Content Area */}
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4 sm:p-6">
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList>
-            <TabsTrigger value="tasks">
+          <TabsList className="flex flex-wrap md:flex-nowrap h-max gap-1 sm:space-x-4 p-1 rounded-md shadow-sm">
+            <TabsTrigger
+              value="tasks"
+              className="text-sm sm:text-base whitespace-nowrap justify-start"
+            >
               <ListChecks className="mr-2 h-4 w-4" />
               Tasks
             </TabsTrigger>
-            <TabsTrigger value="calendar">
+            <TabsTrigger
+              value="calendar"
+              className="text-sm sm:text-base whitespace-nowrap justify-start"
+            >
               <CalendarIcon className="mr-2 h-4 w-4" />
               Calendar
             </TabsTrigger>
-            <TabsTrigger value="weekly">
+            <TabsTrigger
+              value="weekly"
+              className="text-sm sm:text-base whitespace-nowrap justify-start"
+            >
               <CalendarIcon className="mr-2 h-4 w-4" />
               Weekly
             </TabsTrigger>
-            <TabsTrigger value="daily">
+            <TabsTrigger
+              value="daily"
+              className="text-sm sm:text-base whitespace-nowrap justify-start"
+            >
               <CalendarIcon className="mr-2 h-4 w-4" />
               Daily
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="tasks" className="mt-4">
-            <TaskList />
+          <TabsContent value="tasks" className="mt-2">
+            <TaskList tasks={tasks} fetchTasks={fetchTasks} />
           </TabsContent>
-          <TabsContent value="calendar" className="mt-4">
+          <TabsContent value="calendar" className="mt-2">
             <TaskCalendar tasks={tasks} />
           </TabsContent>
-          <TabsContent value="weekly" className="mt-4">
+          <TabsContent value="weekly" className="mt-2">
             <WeeklyTaskList tasks={tasks} />
           </TabsContent>
-          <TabsContent value="daily" className="mt-4">
+          <TabsContent value="daily" className="mt-2">
             <DailyTaskList selectedDate={selectedDate} tasks={tasks} />
           </TabsContent>
         </Tabs>

@@ -130,7 +130,7 @@ export default function SettingsPage() {
 
       {/* Main Content */}
       <main className="flex flex-col items-center justify-center flex-1 px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
+        <div className=" rounded-lg shadow-md p-8 w-full max-w-md">
           <h2 className="text-2xl font-semibold mb-4">Settings</h2>
 
           {loading ? (

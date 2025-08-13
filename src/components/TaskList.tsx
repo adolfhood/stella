@@ -2,26 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -38,16 +21,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon, Edit, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   Select,
@@ -56,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 type Task = {
   id: string;
@@ -66,8 +42,26 @@ type Task = {
   status: string; // Add status
 };
 
-export default function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+const statusColors = {
+  open: "bg-gray-50 text-gray-700",
+  in_progress: "bg-blue-50 text-blue-700",
+  completed: "bg-green-50 text-green-700",
+  cancelled: "bg-red-50 text-red-700",
+};
+
+const statusBorderColors = {
+  open: "border-gray-300",
+  in_progress: "border-blue-300",
+  completed: "border-green-300",
+  cancelled: "border-red-300",
+};
+
+type TaskListProps = {
+  tasks: Task[];
+  fetchTasks: () => Promise<void>;
+};
+
+export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDescription, setNewTaskDescription] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(
@@ -83,33 +77,6 @@ export default function TaskList() {
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [newTaskStatus, setNewTaskStatus] = useState("open");
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching tasks:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error fetching the tasks.",
-        });
-      } else {
-        setTasks(data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-      toast.error("Uh oh! Something went wrong.", {
-        description: "There was an error fetching the tasks.",
-      });
-    }
-  };
 
   const handleAddTask = async () => {
     setLoading(true);
@@ -284,102 +251,154 @@ export default function TaskList() {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks</CardTitle>
-          <CardDescription>Manage your tasks here</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>Add Task</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px">
-              <DialogHeader>
-                <DialogTitle>Add Task</DialogTitle>
-                <DialogDescription>
-                  Create a new task to add to your list.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="title" className="text-right">
-                    Title
-                  </Label>
-                  <Input
-                    type="text"
-                    id="title"
-                    value={newTaskTitle}
-                    onChange={(e) => setNewTaskTitle(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="description" className="text-right">
-                    Description
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={newTaskDescription}
-                    onChange={(e) => setNewTaskDescription(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="dueDate" className="text-right">
-                    Due Date
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-[240px] justify-start text-left font-normal",
-                          !newTaskDueDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newTaskDueDate ? (
-                          format(newTaskDueDate, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={newTaskDueDate}
-                        onSelect={setNewTaskDueDate}
-                        disabled={(date) =>
-                          date < new Date(new Date().toDateString())
-                        }
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="time" className="text-right">
-                    Time
-                  </Label>
-                  <Input
-                    type="time"
-                    id="time"
-                    value={newTaskDueTime}
-                    onChange={(e) => setNewTaskDueTime(e.target.value)}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">
-                    Status
-                  </Label>
-                  <Select
-                    value={newTaskStatus}
-                    onValueChange={setNewTaskStatus}
+    <div className="container mx-auto py-2">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-gray-800">Tasks</h2>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-500 hover:bg-blue-700 text-white">
+              Add Task
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-sm sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Add Task</DialogTitle>
+              <DialogDescription>
+                Create a new task to add to your list.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  type="text"
+                  id="title"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={newTaskDescription}
+                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="dueDate" className="text-right">
+                  Due Date
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] justify-start text-left font-normal text-sm",
+                        !newTaskDueDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {newTaskDueDate ? (
+                        format(newTaskDueDate, "PPP")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={newTaskDueDate}
+                      onSelect={setNewTaskDueDate}
+                      disabled={(date) =>
+                        date < new Date(new Date().toDateString())
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="time" className="text-right">
+                  Time
+                </Label>
+                <Input
+                  type="time"
+                  id="time"
+                  value={newTaskDueTime}
+                  onChange={(e) => setNewTaskDueTime(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <Select value={newTaskStatus} onValueChange={setNewTaskStatus}>
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button
+              onClick={handleAddTask}
+              disabled={loading}
+              className="bg-green-500 hover:bg-green-700 text-white"
+            >
+              Add
+            </Button>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <ul className="space-y-2">
+        {tasks.map((task) => (
+          <Card
+            key={task.id}
+            className={`border-2 ${
+              statusBorderColors[task.status as keyof typeof statusBorderColors]
+            } ${statusColors[task.status as keyof typeof statusColors]}`}
+          >
+            <CardContent className="px-4">
+              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
+                <div className="col-span-3">
+                  <p
+                    className={`${
+                      statusColors[task.status as keyof typeof statusColors]
+                    } bg-none`}
                   >
-                    <SelectTrigger className="col-span-3">
+                    {task.title}
+                  </p>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {task.description || "No description"}
+                  </p>
+                  {task.due_date && (
+                    <p className="text-xs text-muted-foreground">
+                      Due: {new Date(task.due_date).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+                <div className="col-span-1">
+                  <Select
+                    value={task.status}
+                    onValueChange={(status) =>
+                      handleSaveStatus(task.id, status)
+                    }
+                  >
+                    <SelectTrigger className="w-full text-sm">
                       <SelectValue placeholder="Select a status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -390,81 +409,37 @@ export default function TaskList() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      handleEditTask({ ...task, status: task.status })
+                    }
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setDeleteTaskId(task.id);
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <Button onClick={handleAddTask} disabled={loading}>
-                Add
-              </Button>
-            </DialogContent>
-          </Dialog>
+            </CardContent>
+          </Card>
+        ))}
+      </ul>
 
-          <Table>
-            <TableCaption>A list of your tasks.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Title</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tasks.map((task) => (
-                <TableRow key={task.id}>
-                  <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell>{task.description}</TableCell>
-                  <TableCell>
-                    {task.due_date
-                      ? new Date(task.due_date).toLocaleString()
-                      : "No Due Date"}
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={task.status}
-                      onValueChange={(status) =>
-                        handleSaveStatus(task.id, status)
-                      }
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="open">Open</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      onClick={() =>
-                        handleEditTask({ ...task, status: task.status })
-                      }
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setDeleteTaskId(task.id);
-                        setDeleteOpen(true);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
       {/* Edit Dialog */}
       {editTask && (
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-sm sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit Task</DialogTitle>
               <DialogDescription>
@@ -483,7 +458,7 @@ export default function TaskList() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-sm sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Delete Task</DialogTitle>
             <DialogDescription>
@@ -541,6 +516,7 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
         times.push(`${hour}:${minute}`);
       }
     }
+
     return times;
   }
 
@@ -609,22 +585,6 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
           className="col-span-3"
         />
       </div>
-      {/* <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="status" className="text-right">
-          Status
-        </Label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="col-span-3">
-            <SelectValue placeholder="Select a status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div> */}
 
       <div className="flex justify-end space-x-2">
         <Button variant="secondary" onClick={onCancel} disabled={loading}>
@@ -635,6 +595,7 @@ function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
             onSave(task.id, title, description, dueDate, dueTime, status)
           }
           disabled={loading}
+          className="bg-green-500 hover:bg-green-700 text-white"
         >
           Save
         </Button>

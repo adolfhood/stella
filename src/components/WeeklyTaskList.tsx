@@ -19,6 +19,20 @@ interface WeeklyTaskListProps {
   tasks: Task[]; // Tasks are now passed as props
 }
 
+const statusColors = {
+  open: "bg-gray-50 text-gray-700",
+  in_progress: "bg-blue-50 text-blue-700",
+  completed: "bg-green-50 text-green-700",
+  cancelled: "bg-red-50 text-red-700",
+};
+
+const statusBorderColors = {
+  open: "border-gray-300",
+  in_progress: "border-blue-300",
+  completed: "border-green-300",
+  cancelled: "border-red-300",
+};
+
 export default function WeeklyTaskList({ tasks }: WeeklyTaskListProps) {
   const [currentWeekStartDate, setCurrentWeekStartDate] = useState<Date>(
     startOfWeek(new Date(), { weekStartsOn: 0 })
@@ -64,20 +78,29 @@ export default function WeeklyTaskList({ tasks }: WeeklyTaskListProps) {
             <ChevronRightIcon className="h-4 w-4" />
           </Button>
         </CardHeader>
-        <CardContent className="grid grid-cols-7 gap-4">
+        <CardContent className="flex flex-wrap justify-center md:grid md:grid-cols-7 gap-4">
           {currentWeek.map((date) => (
-            <div key={date.toISOString()} className="border rounded-md p-2">
+            <div key={date.toISOString()} className="border rounded-md p-2 overflow-scroll">
               <h3 className="text-sm font-semibold mb-1 text-center">
                 {format(date, "EEE d")}
               </h3>
               {getTasksForDate(date).length > 0 ? (
-                <ul className="list-disc pl-5 text-sm">
+                <div>
                   {getTasksForDate(date).map((task) => (
-                    <li key={task.id} className="mb-0.5">
+                    <p
+                      key={task.id}
+                      className={`${
+                        statusBorderColors[
+                          task.status as keyof typeof statusBorderColors
+                        ]
+                      } ${
+                        statusColors[task.status as keyof typeof statusColors]
+                      } text-xs border-1 w-max px-4 py-1 rounded-xl`}
+                    >
                       {task.title}
-                    </li>
+                    </p>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p className="text-xs text-muted-foreground text-center">
                   No tasks

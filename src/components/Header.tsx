@@ -56,9 +56,9 @@ export default function Header() {
   }, [sidebarRef]);
 
   return (
-    <header className="bg-white shadow h-14 flex items-center justify-between px-4 relative">
+    <header className="bg-primary shadow-sm h-14 flex items-center justify-between px-4 relative">
       <div className="flex items-center">
-        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+        <Button className="text-primary-foreground" variant="ghost" size="icon" onClick={toggleSidebar}>
           {isSidebarOpen ? (
             <X className="h-4 w-4" />
           ) : (
@@ -67,7 +67,7 @@ export default function Header() {
         </Button>
         <Link
           href="/"
-          className="text-xl font-semibold flex items-center space-x-1"
+          className="text-primary-foreground text-xl font-semibold flex items-center space-x-1"
         >
           <StarFilledIcon />
           <span>Stella</span>
@@ -87,7 +87,7 @@ export default function Header() {
           </PopoverTrigger>
           <PopoverContent className="w-48">
             <div className="px-2 py-1">
-              <p className="text-sm font-medium text-gray-800">
+              <p className="text-sm font-medium text-foreground">
                 {session?.user?.email}
               </p>
             </div>
@@ -114,7 +114,7 @@ export default function Header() {
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <Sidebar toggleSidebar={toggleSidebar}/>
+        <Sidebar toggleSidebar={toggleSidebar} />
       </div>
 
       {/* Darkened Overlay */}
