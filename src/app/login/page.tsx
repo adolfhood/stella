@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { StarFilledIcon } from "@radix-ui/react-icons";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +25,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         router.push("/home");
       }
@@ -32,7 +35,6 @@ export default function LoginPage() {
 
     checkSession();
   }, [router]);
-
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,17 +58,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="grid h-screen place-items-center">
-      <Card className="w-[450px]">
-        <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your email and password to login</CardDescription>
+    <div className="grid h-screen place-items-center p-4 bg-neutral-200">
+      <Card className="w-full max-w-[450px]">
+        <CardHeader className="flex flex-col items-center">
+          <CardTitle className="text-3xl font-bold text-primary mb-2 flex justify-center items-center gap-1">
+            <StarFilledIcon /> Stella
+          </CardTitle>
+          <CardDescription>
+            Enter your email and password to login
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {error && <p className="text-red-500">{error}</p>}
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label className="mb-2" htmlFor="email">
+                Email
+              </Label>
               <Input
                 type="email"
                 id="email"
@@ -76,7 +84,9 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label className="mb-2" htmlFor="password">
+                Password
+              </Label>
               <Input
                 type="password"
                 id="password"
@@ -90,7 +100,10 @@ export default function LoginPage() {
             </Button>
           </form>
           <p className="text-sm mt-4">
-            Don't have an account? <Link href="/sign-up" className="text-blue-500">Sign up</Link>
+            Don't have an account?{" "}
+            <Link href="/sign-up" className="text-blue-500">
+              Sign up
+            </Link>
           </p>
         </CardContent>
       </Card>

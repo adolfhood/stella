@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { StarFilledIcon } from "@radix-ui/react-icons";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -24,7 +25,9 @@ export default function SignUpPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (session) {
         router.push("/home");
       }
@@ -58,17 +61,21 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="grid h-screen place-items-center">
-      <Card className="w-[450px]">
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
+    <div className="grid h-screen place-items-center p-4 bg-neutral-200">
+      <Card className="w-full max-w-[450px]">
+        <CardHeader className="flex flex-col items-center">
+          <CardTitle className="text-3xl font-bold text-primary mb-2 flex justify-center items-center gap-1">
+            <StarFilledIcon /> Stella
+          </CardTitle>
           <CardDescription>Create an account to get started</CardDescription>
         </CardHeader>
         <CardContent>
           {error && <p className="text-red-500">{error}</p>}
           <form onSubmit={handleSignUp} className="space-y-4">
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label className="mb-2" htmlFor="email">
+                Email
+              </Label>
               <Input
                 type="email"
                 id="email"
@@ -78,7 +85,9 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label className="mb-2" htmlFor="password">
+                Password
+              </Label>
               <Input
                 type="password"
                 id="password"
@@ -92,7 +101,10 @@ export default function SignUpPage() {
             </Button>
           </form>
           <p className="text-sm mt-4">
-            Already have an account? <Link href="/login" className="text-blue-500">Login</Link>
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-500">
+              Login
+            </Link>
           </p>
         </CardContent>
       </Card>

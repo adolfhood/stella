@@ -1,7 +1,11 @@
 "use client";
 
-import { format, isSameDay, parseISO } from "date-fns";
+import { format, isSameDay, parseISO, addDays, subDays } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import TaskCard from "./TaskCard";
 
 type Task = {
   id: string;
@@ -13,46 +17,71 @@ type Task = {
 };
 
 interface DailyTaskListProps {
-  selectedDate: Date | undefined;
   tasks: Task[]; // Tasks are now passed as props
+  selectedDate: Date | undefined;
+  setSelectedDate: (date: Date) => void;
 }
 
-export default function DailyTaskList({ selectedDate, tasks }: DailyTaskListProps) {
-  const getTasksForDate = (date: Date | undefined) => {
-    if (!date) return [];
+export default function DailyTaskList({
+  tasks,
+  selectedDate,
+  setSelectedDate,
+}: DailyTaskListProps) {
+  const [currentDate, setCurrentDate] = useState(selectedDate || new Date());
 
+  const getTasksForDate = (date: Date) => {
     return tasks.filter(
       (task) => task.due_date && isSameDay(new Date(task.due_date), date)
     );
   };
 
-  const tasksForSelectedDate = getTasksForDate(selectedDate);
+  const tasksForSelectedDate = getTasksForDate(currentDate);
+
+  const handlePrevDay = () => {
+    const newDate = subDays(currentDate, 1);
+    setCurrentDate(newDate);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextDay = () => {
+    const newDate = addDays(currentDate, 1);
+    setCurrentDate(newDate);
+    setSelectedDate(newDate);
+  };
 
   return (
     <div className="container mx-auto py-10">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Button variant="ghost" size="sm" onClick={handlePrevDay}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
           <CardTitle>
-            {selectedDate
-              ? `Tasks for ${format(selectedDate, "PPP")}`
+            {currentDate
+              ? `Tasks for ${format(currentDate, "PPP")}`
               : "Select a date"}
           </CardTitle>
+          <Button variant="ghost" size="sm" onClick={handleNextDay}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </CardHeader>
         <CardContent>
-          {selectedDate ? (
+          {currentDate ? (
             tasksForSelectedDate.length > 0 ? (
-              <ul className="list-disc pl-5">
+              <div>
                 {tasksForSelectedDate.map((task) => (
-                  <li key={task.id} className="mb-1">
-                    {task.title}
-                  </li>
+                  <div key={task.id}>
+                    <TaskCard task={task} />
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="text-muted-foreground">No tasks for this day.</p>
             )
           ) : (
-            <p className="text-muted-foreground">Select a date to view tasks.</p>
+            <p className="text-muted-foreground">
+              Select a date to view tasks.
+            </p>
           )}
         </CardContent>
       </Card>

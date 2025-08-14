@@ -131,7 +131,7 @@ export default function HomePage() {
             <WeeklyTaskList tasks={tasks} />
           </TabsContent>
           <TabsContent value="daily" className="mt-2">
-            <DailyTaskList selectedDate={selectedDate} tasks={tasks} />
+            <DailyTaskList selectedDate={selectedDate} tasks={tasks} setSelectedDate={setSelectedDate} />
           </TabsContent>
         </Tabs>
       </main>
@@ -141,3 +141,4 @@ export default function HomePage() {
     </div>
   );
 }
+

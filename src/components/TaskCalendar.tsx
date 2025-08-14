@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import TaskCard from "./TaskCard";
 
 type Task = {
   id: string;
@@ -82,7 +83,7 @@ export default function TaskCalendar({ tasks }: TaskCalendarProps) {
               </span>
             ))}
             {tasksForDate.length > 2 && (
-              <span className="bg-muted text-muted-foreground rounded-md px-1 py-0.5 text-[0.6rem]">
+              <span className="bg-muted text-muted-foreground rounded-md px-1 py-0.5 text-[0.6rem">
                 +{tasksForDate.length - 2} more
               </span>
             )}
@@ -119,53 +120,7 @@ export default function TaskCalendar({ tasks }: TaskCalendarProps) {
           {getTasksForDate(selectedDate).length > 0 ? (
             <div>
               {getTasksForDate(selectedDate).map((task) => (
-                <Card
-                  key={task.id}
-                  className={`border-2 ${
-                    statusBorderColors[
-                      task.status as keyof typeof statusBorderColors
-                    ]
-                  } ${statusColors[task.status as keyof typeof statusColors]}`}
-                >
-                  <CardContent className="px-4">
-                    <div className="flex flex-col gap-2 items-center relative">
-                      <div className="col-span-3">
-                        <p
-                          className={`${
-                            statusColors[
-                              task.status as keyof typeof statusColors
-                            ]
-                          } bg-none`}
-                        >
-                          {task.title}
-                        </p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {task.description || "No description"}
-                        </p>
-                        {task.due_date && (
-                          <p className="text-xs text-muted-foreground">
-                            Due: {new Date(task.due_date).toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex justify-center">
-                        <div
-                          className={`${
-                            statusBorderColors[
-                              task.status as keyof typeof statusBorderColors
-                            ]
-                          } ${
-                            statusColors[
-                              task.status as keyof typeof statusColors
-                            ]
-                          } text-xs border-1 w-max px-4 py-1 rounded-xl`}
-                        >
-                          {task.status[0].toUpperCase() + task.status.slice(1)}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <TaskCard key={task.id} task={task} />
               ))}
             </div>
           ) : (

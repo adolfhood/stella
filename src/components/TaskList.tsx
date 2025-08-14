@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import TaskCard from "./TaskCard";
 
 type Task = {
   id: string;
@@ -300,7 +301,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-[240px] justify-start text-left font-normal text-sm",
+                        "w-[240px justify-start text-left font-normal text-sm",
                         !newTaskDueDate && "text-muted-foreground"
                       )}
                     >
@@ -366,73 +367,64 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
 
       <ul className="space-y-2">
         {tasks.map((task) => (
-          <Card
-            key={task.id}
-            className={`border-2 ${
-              statusBorderColors[task.status as keyof typeof statusBorderColors]
-            } ${statusColors[task.status as keyof typeof statusColors]}`}
-          >
-            <CardContent className="px-4">
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
-                <div className="col-span-3">
-                  <p
-                    className={`${
-                      statusColors[task.status as keyof typeof statusColors]
-                    } bg-none`}
-                  >
-                    {task.title}
+          <TaskCard key={task.id} task={task}>
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
+              <div className="col-span-3">
+                <p
+                  className={`${
+                    statusColors[task.status as keyof typeof statusColors]
+                  } bg-none`}
+                >
+                  {task.title}
+                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {task.description || "No description"}
+                </p>
+                {task.due_date && (
+                  <p className="text-xs text-muted-foreground">
+                    Due: {new Date(task.due_date).toLocaleString()}
                   </p>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {task.description || "No description"}
-                  </p>
-                  {task.due_date && (
-                    <p className="text-xs text-muted-foreground">
-                      Due: {new Date(task.due_date).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-                <div className="col-span-1">
-                  <Select
-                    value={task.status}
-                    onValueChange={(status) =>
-                      handleSaveStatus(task.id, status)
-                    }
-                  >
-                    <SelectTrigger className="w-full text-sm">
-                      <SelectValue placeholder="Select a status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">Open</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      handleEditTask({ ...task, status: task.status })
-                    }
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setDeleteTaskId(task.id);
-                      setDeleteOpen(true);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
+              <div className="col-span-1">
+                <Select
+                  value={task.status}
+                  onValueChange={(status) => handleSaveStatus(task.id, status)}
+                >
+                  <SelectTrigger className="w-full text-sm">
+                    <SelectValue placeholder="Select a status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    handleEditTask({ ...task, status: task.status })
+                  }
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setDeleteTaskId(task.id);
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </TaskCard>
         ))}
       </ul>
 
