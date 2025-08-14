@@ -35,7 +35,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import TaskCard from "./TaskCard";
 
 type Task = {
-  id: string;
+  id?: string; // Optional id for new tasks
   title: string;
   description: string | null;
   due_date: string | null;
@@ -63,21 +63,56 @@ type TaskListProps = {
 };
 
 export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskDescription, setNewTaskDescription] = useState("");
-  const [newTaskDueDate, setNewTaskDueDate] = useState<Date | undefined>(
-    undefined
-  );
-  const [newTaskDueTime, setNewTaskDueTime] = useState<string | undefined>(
-    undefined
-  );
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [editTask, setEditTask] = useState<Task | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null); // Null for adding, Task for editing
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [newTaskStatus, setNewTaskStatus] = useState("open");
+
+  const [taskForm, setTaskForm] = useState<Task>({
+    title: "",
+    description: "",
+    due_date: null,
+    due_time: null,
+    status: "open",
+  });
+
+  const resetTaskForm = () => {
+    setTaskForm({
+      title: "",
+      description: "",
+      due_date: null,
+      due_time: null,
+      status: "open",
+    });
+  };
+
+  const handleOpenDialog = () => {
+    resetTaskForm();
+    setEditTask(null); // Clear edit task to indicate adding
+    setOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpen(false);
+    resetTaskForm();
+    setEditTask(null);
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setTaskForm((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setTaskForm((prev) => ({ ...prev, due_date: date?.toISOString() || null }));
+  };
+
+  const handleStatusChange = (status: string) => {
+    setTaskForm((prev) => ({ ...prev, status: status }));
+  };
 
   const handleAddTask = async () => {
     setLoading(true);
@@ -86,24 +121,24 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
 
     // Combine date and time
     let combinedDateTime: string | null = null;
-    if (newTaskDueDate && newTaskDueTime) {
-      const [hours, minutes] = newTaskDueTime.split(":");
-      const newDate = new Date(newTaskDueDate);
+    if (taskForm.due_date && taskForm.due_time) {
+      const [hours, minutes] = taskForm.due_time.split(":");
+      const newDate = new Date(taskForm.due_date);
       newDate.setHours(parseInt(hours));
       newDate.setMinutes(parseInt(minutes));
       combinedDateTime = newDate.toISOString();
-    } else if (newTaskDueDate) {
-      combinedDateTime = newTaskDueDate.toISOString();
+    } else if (taskForm.due_date) {
+      combinedDateTime = taskForm.due_date;
     }
 
     try {
       const { error } = await supabase.from("tasks").insert({
-        title: newTaskTitle,
-        description: newTaskDescription,
+        title: taskForm.title,
+        description: taskForm.description,
         due_date: combinedDateTime,
-        due_time: newTaskDueTime,
+        due_time: taskForm.due_time,
         user_id: data.session?.user.id,
-        status: newTaskStatus,
+        status: taskForm.status,
       });
 
       if (error) {
@@ -112,12 +147,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           description: "There was an error adding the task.",
         });
       } else {
-        setNewTaskTitle("");
-        setNewTaskDescription("");
-        setNewTaskDueDate(undefined);
-        setNewTaskDueTime(undefined);
-        setNewTaskStatus("open");
-        setOpen(false);
+        handleCloseDialog();
         fetchTasks(); // Refresh task list
         toast.success("Task added successfully!", {
           description: "The task has been added to your list.",
@@ -130,6 +160,94 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setTaskForm(task);
+    setEditTask(task);
+    setOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    setLoading(true);
+
+    // Combine date and time
+    let combinedDateTime: string | null = null;
+    if (taskForm.due_date && taskForm.due_time) {
+      const [hours, minutes] = taskForm.due_time.split(":");
+      const newDate = new Date(taskForm.due_date);
+      newDate.setHours(parseInt(hours));
+      newDate.setMinutes(parseInt(minutes));
+      combinedDateTime = newDate.toISOString();
+    } else if (taskForm.due_date) {
+      combinedDateTime = taskForm.due_date;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          title: taskForm.title,
+          description: taskForm.description,
+          due_date: combinedDateTime,
+          due_time: taskForm.due_time,
+          status: taskForm.status,
+        })
+        .eq("id", editTask!.id);
+
+      if (error) {
+        console.error("Error editing task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error editing the task.",
+        });
+      } else {
+        handleCloseDialog();
+        fetchTasks();
+        toast.success("Task edited successfully!", {
+          description: "The task has been updated in your list.",
+        });
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error editing the task.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (editTask) {
+      handleSaveEdit();
+    } else {
+      handleAddTask();
+    }
+  };
+
+  const handleSaveStatus = async (taskId: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({
+          status: status,
+        })
+        .eq("id", taskId);
+
+      if (error) {
+        console.error("Error editing task:", error);
+        toast.error("Uh oh! Something went wrong.", {
+          description: "There was an error editing the task.",
+        });
+      } else {
+        fetchTasks();
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error editing the task.",
+      });
     }
   };
 
@@ -159,113 +277,26 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
   };
 
-  const handleEditTask = (task: Task) => {
-    setEditTask(task);
-    setEditOpen(true);
-  };
-
-  const handleSaveEdit = async (
-    taskId: string,
-    title: string,
-    description: string | null,
-    dueDate: Date | undefined,
-    dueTime: string | null,
-    status: string
-  ) => {
-    setLoading(true);
-
-    // Combine date and time
-    let combinedDateTime: string | null = null;
-    if (dueDate && dueTime) {
-      const [hours, minutes] = dueTime.split(":");
-      const newDate = new Date(dueDate);
-      newDate.setHours(parseInt(hours));
-      newDate.setMinutes(parseInt(minutes));
-      combinedDateTime = newDate.toISOString();
-    } else if (dueDate) {
-      combinedDateTime = dueDate.toISOString();
-    }
-
-    try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
-          title: title,
-          description: description,
-          due_date: combinedDateTime,
-          due_time: dueTime,
-          status: status,
-        })
-        .eq("id", taskId);
-
-      if (error) {
-        console.error("Error editing task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error editing the task.",
-        });
-      } else {
-        setEditOpen(false);
-        setEditTask(null);
-        fetchTasks();
-        toast.success("Task edited successfully!", {
-          description: "The task has been updated in your list.",
-        });
-      }
-    } catch (error) {
-      console.error("Error editing task:", error);
-      toast.error("Uh oh! Something went wrong.", {
-        description: "There was an error editing the task.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveStatus = async (taskId: string, status: string) => {
-    try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
-          status: status,
-        })
-        .eq("id", taskId);
-
-      if (error) {
-        console.error("Error editing task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error editing the task.",
-        });
-      } else {
-        fetchTasks();
-      }
-    } catch (error) {
-      console.error("Error editing task:", error);
-      toast.error("Uh oh! Something went wrong.", {
-        description: "There was an error editing the task.",
-      });
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditOpen(false);
-    setEditTask(null);
-  };
-
   return (
     <div className="container mx-auto py-2">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Tasks</h2>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-700 text-white">
+            <Button
+              className="bg-blue-500 hover:bg-blue-700 text-white"
+              onClick={handleOpenDialog}
+            >
               Add Task
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-sm sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle>Add Task</DialogTitle>
+              <DialogTitle>{editTask ? "Edit Task" : "Add Task"}</DialogTitle>
               <DialogDescription>
-                Create a new task to add to your list.
+                {editTask
+                  ? "Edit the fields for this task."
+                  : "Create a new task to add to your list."}
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -276,8 +307,8 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 <Input
                   type="text"
                   id="title"
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  value={taskForm.title}
+                  onChange={handleInputChange}
                   className="col-span-3"
                 />
               </div>
@@ -287,13 +318,13 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 </Label>
                 <Textarea
                   id="description"
-                  value={newTaskDescription}
-                  onChange={(e) => setNewTaskDescription(e.target.value)}
+                  value={taskForm.description || ""}
+                  onChange={handleInputChange}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="dueDate" className="text-right">
+                <Label htmlFor="due_date" className="text-right">
                   Due Date
                 </Label>
                 <Popover>
@@ -301,13 +332,13 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                     <Button
                       variant={"outline"}
                       className={cn(
-                        "w-[240px justify-start text-left font-normal text-sm",
-                        !newTaskDueDate && "text-muted-foreground"
+                        "col-span-3 justify-start text-left font-normal text-sm",
+                        !taskForm.due_date && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newTaskDueDate ? (
-                        format(newTaskDueDate, "PPP")
+                      {taskForm.due_date ? (
+                        format(new Date(taskForm.due_date), "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}
@@ -316,24 +347,29 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={newTaskDueDate}
-                      onSelect={setNewTaskDueDate}
+                      selected={
+                        taskForm.due_date
+                          ? new Date(taskForm.due_date)
+                          : undefined
+                      }
+                      onSelect={handleDateChange}
                       disabled={(date) =>
                         date < new Date(new Date().toDateString())
                       }
+                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="time" className="text-right">
+                <Label htmlFor="due_time" className="text-right">
                   Time
                 </Label>
                 <Input
                   type="time"
-                  id="time"
-                  value={newTaskDueTime}
-                  onChange={(e) => setNewTaskDueTime(e.target.value)}
+                  id="due_time"
+                  value={taskForm.due_time as any}
+                  onChange={handleInputChange}
                   className="col-span-3"
                 />
               </div>
@@ -341,7 +377,10 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 <Label htmlFor="status" className="text-right">
                   Status
                 </Label>
-                <Select value={newTaskStatus} onValueChange={setNewTaskStatus}>
+                <Select
+                  value={taskForm.status}
+                  onValueChange={handleStatusChange}
+                >
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a status" />
                   </SelectTrigger>
@@ -354,20 +393,29 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 </Select>
               </div>
             </div>
-            <Button
-              onClick={handleAddTask}
-              disabled={loading}
-              className="bg-green-500 hover:bg-green-700 text-white"
-            >
-              Add
-            </Button>
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="secondary"
+                onClick={handleCloseDialog}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="bg-green-500 hover:bg-green-700 text-white"
+              >
+                {editTask ? "Save" : "Add"}
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
 
       <ul className="space-y-2">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task}>
+          <TaskCard key={task.id} task={task as any}>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
               <div className="col-span-3">
                 <p
@@ -389,7 +437,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
               <div className="col-span-1">
                 <Select
                   value={task.status}
-                  onValueChange={(status) => handleSaveStatus(task.id, status)}
+                  onValueChange={(status) => handleSaveStatus(task.id!, status)}
                 >
                   <SelectTrigger className="w-full text-sm">
                     <SelectValue placeholder="Select a status" />
@@ -406,9 +454,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() =>
-                    handleEditTask({ ...task, status: task.status })
-                  }
+                  onClick={() => handleEditTask(task)}
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
@@ -416,7 +462,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    setDeleteTaskId(task.id);
+                    setDeleteTaskId(task.id!);
                     setDeleteOpen(true);
                   }}
                 >
@@ -427,26 +473,6 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           </TaskCard>
         ))}
       </ul>
-
-      {/* Edit Dialog */}
-      {editTask && (
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="max-w-sm sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Edit Task</DialogTitle>
-              <DialogDescription>
-                Edit the fields for this task.
-              </DialogDescription>
-            </DialogHeader>
-            <EditTaskForm
-              task={editTask}
-              onSave={handleSaveEdit}
-              onCancel={handleCancelEdit}
-              loading={loading}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -472,126 +498,6 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-type EditTaskFormProps = {
-  task: Task;
-  onSave: (
-    taskId: string,
-    title: string,
-    description: string | null,
-    dueDate: Date | undefined,
-    dueTime: string | null,
-    status: string
-  ) => void;
-  onCancel: () => void;
-  loading: boolean;
-};
-
-function EditTaskForm({ task, onSave, onCancel, loading }: EditTaskFormProps) {
-  const [title, setTitle] = useState(task.title);
-  const [description, setDescription] = useState(task.description || "");
-  const [dueDate, setDueDate] = useState<Date | undefined>(
-    task.due_date ? new Date(task.due_date) : undefined
-  );
-  const [dueTime, setDueTime] = useState<string | null>(task.due_time);
-  const [status, setStatus] = useState(task.status);
-
-  function getTimeOptions() {
-    const times = [];
-    for (let i = 0; i < 24; i++) {
-      for (let j = 0; j < 60; j += 30) {
-        const hour = i.toString().padStart(2, "0");
-        const minute = j.toString().padStart(2, "0");
-        times.push(`${hour}:${minute}`);
-      }
-    }
-
-    return times;
-  }
-
-  return (
-    <div className="grid gap-4 py-4">
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="title" className="text-right">
-          Title
-        </Label>
-        <Input
-          type="text"
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="col-span-3"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="description" className="text-right">
-          Description
-        </Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="col-span-3"
-        />
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="dueDate" className="text-right">
-          Due Date
-        </Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[240px] justify-start text-left font-normal",
-                !dueDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar
-              mode="single"
-              selected={dueDate}
-              onSelect={setDueDate}
-              disabled={(date) => date < new Date(new Date().toDateString())}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
-      </div>
-      <div className="grid grid-cols-4 items-center gap-4">
-        <Label htmlFor="time" className="text-right">
-          Time
-        </Label>
-        <Input
-          type="time"
-          id="time"
-          value={dueTime as any}
-          onChange={(e) => setDueTime(e.target.value)}
-          className="col-span-3"
-        />
-      </div>
-
-      <div className="flex justify-end space-x-2">
-        <Button variant="secondary" onClick={onCancel} disabled={loading}>
-          Cancel
-        </Button>
-        <Button
-          onClick={() =>
-            onSave(task.id, title, description, dueDate, dueTime, status)
-          }
-          disabled={loading}
-          className="bg-green-500 hover:bg-green-700 text-white"
-        >
-          Save
-        </Button>
-      </div>
     </div>
   );
 }
