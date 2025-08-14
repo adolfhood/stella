@@ -49,6 +49,8 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message);
+      } else {
+        router.push("/home");
       }
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred");

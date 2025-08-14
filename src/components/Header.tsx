@@ -58,13 +58,20 @@ export default function Header() {
   return (
     <header className="bg-primary shadow-sm h-14 flex items-center justify-between px-4 relative">
       <div className="flex items-center">
-        <Button className="text-primary-foreground" variant="ghost" size="icon" onClick={toggleSidebar}>
-          {isSidebarOpen ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Menu className="h-4 w-4" />
-          )}
-        </Button>
+        {session && (
+          <Button
+            className="text-primary-foreground"
+            variant="default"
+            size="icon"
+            onClick={toggleSidebar}
+          >
+            {isSidebarOpen ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Menu className="h-4 w-4" />
+            )}
+          </Button>
+        )}
         <Link
           href="/"
           className="text-primary-foreground text-xl font-semibold flex items-center space-x-1"
@@ -103,19 +110,29 @@ export default function Header() {
           </PopoverContent>
         </Popover>
       ) : (
-        <Link href="/login">Login</Link>
+        <div>
+          <Button
+            variant="secondary"
+            className="bg-secondary hover:bg-green-500 text-secondary-foreground mr-2"
+            asChild
+          >
+            <Link href="/login">Login</Link>
+          </Button>
+        </div>
       )}
 
       {/* Sidebar */}
-      <div
-        ref={sidebarRef}
-        className={cn(
-          "fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out",
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}
-      >
-        <Sidebar toggleSidebar={toggleSidebar} />
-      </div>
+      {session && (
+        <div
+          ref={sidebarRef}
+          className={cn(
+            "fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <Sidebar toggleSidebar={toggleSidebar} />
+        </div>
+      )}
 
       {/* Darkened Overlay */}
       {isSidebarOpen && (
