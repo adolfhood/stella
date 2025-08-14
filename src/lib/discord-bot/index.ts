@@ -79,39 +79,50 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
 const BATCH_SIZE = 500; // Define the batch size
 
 // Function to fetch tasks from Supabase with pagination
-async function fetchTasks(page: number) {
+
+async function fetchTasks(page: number, maxDueDate: Date) {
   const now = new Date();
-  const fifteenMinutesFromNow = new Date(now.getTime() + 15 * 60 * 1000);
+  now.setSeconds(0, 0);
+
   const start = page * BATCH_SIZE;
   const end = start + BATCH_SIZE - 1;
 
+  let tasks = [];
+
   const {
-    data: tasks,
+    data: dbTasks,
     error,
     count,
   } = await supabase
     .from("tasks")
     .select("*", { count: "exact" }) // Request the total count
-    .lte("due_date", fifteenMinutesFromNow.toISOString())
-    .gt("due_date", now.toISOString())
+
+    .lte("due_date", maxDueDate.toISOString())
+    .gte("due_date", now.toISOString())
     .in("status", ["open", "in_progress"])
     .range(start, end); // Use range for pagination
+
+  if (dbTasks && dbTasks.length > 0) {
+    tasks = dbTasks;
+  }
 
   if (error) {
     console.error("Error fetching tasks:", error);
     return { tasks: [], totalCount: 0 };
   }
 
-  return { tasks, totalCount: count || 0 };
+  return { tasks: tasks || [], totalCount: count || 0 };
 }
 
 // Function to generate a creative reminder using the Gemini API
 async function generateCreativeReminder(
   taskName: string,
-  characterIndex: number
+  characterIndex: number,
+  timeFrame: string
 ): Promise<string> {
   const prompt =
-    characterPrompts[characterIndex].prompt.replace("[taskName]", taskName) +
+    characterPrompts[characterIndex].prompt.replace("[taskName", taskName) +
+    ` This is a reminder for ${timeFrame}.` +
     "Keep it brief and engaging.";
 
   try {
@@ -177,89 +188,134 @@ async function sendNotification(
 
 // Main function to fetch and notify about tasks
 async function main() {
-  console.log("Fetching tasks from Supabase...");
+  console.log("Processing tasks for all time frames...");
+  const now = new Date();
+  now.setSeconds(0, 0);
 
+  const fifteenMinutes = new Date(now.getTime() + 15 * 60 * 1000);
+  fifteenMinutes.setSeconds(1, 0);
+
+  let allTasks: any[] = [];
   let page = 0;
   let totalCount = 0;
 
   do {
-    const { tasks, totalCount: currentTotalCount } = await fetchTasks(page);
+    const { tasks, totalCount: currentTotalCount } = await fetchTasks(
+      page,
+
+      fifteenMinutes
+    );
 
     if (page === 0) {
       totalCount = currentTotalCount;
+
       console.log(`Total tasks to process: ${totalCount}`);
     }
 
     if (tasks.length === 0) {
       break; // No more tasks to process
     }
-    // Fetch all user IDs from the tasks
-    const userIds = tasks.map((task) => task.user_id);
 
-    // Fetch user settings for all user IDs in a single query
-    const { data: userSettingsList, error: userSettingsError } = await supabase
-      .from("user_settings")
-      .select("user_id, selected_character, discord_webhook_url")
-      .in("user_id", userIds);
-
-    if (userSettingsError) {
-      console.error("Error fetching user settings:", userSettingsError);
-      continue; // Continue to the next batch
-    }
-
-    // Create a map of user settings for easy lookup
-    const userSettingsMap = new Map();
-    userSettingsList.forEach((settings) => {
-      userSettingsMap.set(settings.user_id, settings);
-    });
-
-    for (const task of tasks) {
-      const userId = task.user_id;
-
-      // Retrieve user settings from the map
-      const userSettings = userSettingsMap.get(userId);
-
-      let selectedCharacterIndex = 0; // Default to Professor Promptly
-      let webhookUrl = discordWebhookUrl; // Default to the environment variable
-
-      if (userSettings) {
-        selectedCharacterIndex = parseInt(
-          userSettings.selected_character || "0",
-          10
-        );
-        webhookUrl = userSettings.discord_webhook_url || discordWebhookUrl;
-      } else {
-        console.log(
-          `No user settings found for user ${userId}, defaulting to Professor Promptly and default webhook`
-        );
-      }
-
-      const creativeReminder = await generateCreativeReminder(
-        task.title,
-        selectedCharacterIndex
-      );
-      await sendNotification(
-        task.title,
-        creativeReminder,
-        characterPrompts[selectedCharacterIndex].name,
-        webhookUrl // Pass the webhook URL
-      );
-      console.log(`Notification sent for task: ${task.title}`);
-    }
-
-    page++; // Move to the next page
-    console.log(
-      `Processed page ${page}, tasks processed so far: ${page * BATCH_SIZE}`
-    );
+    allTasks = allTasks.concat(tasks);
+    page++;
   } while (page * BATCH_SIZE < totalCount);
 
-  console.log("All tasks processed.");
+  // Process exact minute reminders
+  const exactTasks = allTasks.filter(
+    (task) => new Date(task.due_date).toISOString() === now.toISOString()
+  );
+  await processTasks(exactTasks, "exact");
+
+  // Process 5-minute reminders
+  const fiveMinuteTasks = allTasks.filter(
+    (task) =>
+      new Date(task.due_date).toISOString() ==
+      new Date(now.getTime() + 5 * 60 * 1000).toISOString()
+  );
+  await processTasks(fiveMinuteTasks, "5min");
+
+  // Process 15-minute reminders
+  const fifteenMinuteTasks = allTasks.filter(
+    (task) =>
+      new Date(task.due_date).toISOString() ==
+      new Date(now.getTime() + 15 * 60 * 1000).toISOString()
+  );
+  await processTasks(fifteenMinuteTasks, "15min");
+
+  console.log("All tasks processed for this cycle.");
 }
 
-// Run function on startup
-main();
+async function processTasks(tasks: any[], timeFrame: string) {
+  if (tasks.length === 0) {
+    console.log(`No tasks to process for ${timeFrame}.`);
+    return;
+  }
 
-// Run the main function every 5 minutes (adjust as needed)
-setInterval(main, 300000);
+  console.log(`Processing ${tasks.length} tasks for ${timeFrame}...`);
+
+  // Fetch all user IDs from the tasks
+  const userIds = tasks.map((task) => task.user_id);
+
+  // Fetch user settings for all user IDs in a single query
+  const { data: userSettingsList, error: userSettingsError } = await supabase
+    .from("user_settings")
+    .select("user_id, selected_character, discord_webhook_url")
+    .in("user_id", userIds);
+
+  if (userSettingsError) {
+    console.error("Error fetching user settings:", userSettingsError);
+    return;
+  }
+
+  // Create a map of user settings for easy lookup
+  const userSettingsMap = new Map();
+  userSettingsList.forEach((settings) => {
+    userSettingsMap.set(settings.user_id, settings);
+  });
+
+  for (const task of tasks) {
+    const userId = task.user_id;
+
+    // Retrieve user settings from the map
+    const userSettings = userSettingsMap.get(userId);
+
+    let selectedCharacterIndex = 0; // Default to Professor Promptly
+    let webhookUrl = discordWebhookUrl; // Default to the environment variable
+
+    if (userSettings) {
+      selectedCharacterIndex = parseInt(
+        userSettings.selected_character || "0",
+        10
+      );
+
+      webhookUrl = userSettings.discord_webhook_url || discordWebhookUrl;
+    } else {
+      console.log(
+        `No user settings found for user ${userId}, defaulting to Professor Promptly and default webhook`
+      );
+    }
+
+    const creativeReminder = await generateCreativeReminder(
+      task.title,
+      selectedCharacterIndex,
+      timeFrame
+    );
+
+    await sendNotification(
+      task.title,
+      creativeReminder,
+      characterPrompts[selectedCharacterIndex].name,
+      webhookUrl // Pass the webhook URL
+    );
+    console.log(`Notification sent for task: ${task.title} for ${timeFrame}`);
+  }
+
+  console.log(`All tasks processed for ${timeFrame}.`);
+}
+
+// Run the main function every minute
+
+main();
+setInterval(main, 60000);
 
 console.log("Discord webhook integration started.");
