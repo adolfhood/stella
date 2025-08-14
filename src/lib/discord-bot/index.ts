@@ -76,40 +76,33 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   },
 });
 
-// Function to fetch tasks from Supabase
-async function fetchTasks() {
+const BATCH_SIZE = 500; // Define the batch size
+
+// Function to fetch tasks from Supabase with pagination
+async function fetchTasks(page: number) {
   const now = new Date();
   const fifteenMinutesFromNow = new Date(now.getTime() + 15 * 60 * 1000);
+  const start = page * BATCH_SIZE;
+  const end = start + BATCH_SIZE - 1;
 
-  const { data: tasks, error } = await supabase
+  const {
+    data: tasks,
+    error,
+    count,
+  } = await supabase
     .from("tasks")
-    .select("*")
+    .select("*", { count: "exact" }) // Request the total count
     .lte("due_date", fifteenMinutesFromNow.toISOString())
     .gt("due_date", now.toISOString())
-    .in("status", ["open", "in_progress"]);
+    .in("status", ["open", "in_progress"])
+    .range(start, end); // Use range for pagination
 
   if (error) {
     console.error("Error fetching tasks:", error);
-    return [];
+    return { tasks: [], totalCount: 0 };
   }
 
-  return tasks;
-}
-
-// Function to fetch user settings from Supabase
-async function fetchUserSettings(userId: string) {
-  const { data, error } = await supabase
-    .from("user_settings")
-    .select("selected_character")
-    .eq("user_id", userId)
-    .single();
-
-  if (error) {
-    console.error("Error fetching user settings:", error);
-    return null;
-  }
-
-  return data;
+  return { tasks, totalCount: count || 0 };
 }
 
 // Function to generate a creative reminder using the Gemini API
@@ -157,7 +150,8 @@ async function generateCreativeReminder(
 async function sendNotification(
   taskName: string,
   creativeReminder: string,
-  characterName: string
+  characterName: string,
+  discordWebhookUrl: string // Add discordWebhookUrl parameter
 ) {
   try {
     const response = await fetch(discordWebhookUrl, {
@@ -166,7 +160,7 @@ async function sendNotification(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        content: `[${taskName}]\n\n${creativeReminder}`, // Use the creative reminder
+        content: `**${taskName}**\n\n${creativeReminder}`, // Use the creative reminder
         username: characterName,
       }),
     });
@@ -184,31 +178,82 @@ async function sendNotification(
 // Main function to fetch and notify about tasks
 async function main() {
   console.log("Fetching tasks from Supabase...");
-  const tasks = await fetchTasks();
 
-  for (const task of tasks) {
-    const userId = task.user_id;
+  let page = 0;
+  let totalCount = 0;
 
-    const userSettings = await fetchUserSettings(userId);
+  do {
+    const { tasks, totalCount: currentTotalCount } = await fetchTasks(page);
 
-    let selectedCharacterIndex = 0; // Default to Professor Promptly
-    if (userSettings && userSettings.selected_character) {
-      selectedCharacterIndex = parseInt(userSettings.selected_character, 10);
-    } else {
-      console.log("No user settings found, defaulting to Professor Promptly");
+    if (page === 0) {
+      totalCount = currentTotalCount;
+      console.log(`Total tasks to process: ${totalCount}`);
     }
 
-    const creativeReminder = await generateCreativeReminder(
-      task.title,
-      selectedCharacterIndex
+    if (tasks.length === 0) {
+      break; // No more tasks to process
+    }
+    // Fetch all user IDs from the tasks
+    const userIds = tasks.map((task) => task.user_id);
+
+    // Fetch user settings for all user IDs in a single query
+    const { data: userSettingsList, error: userSettingsError } = await supabase
+      .from("user_settings")
+      .select("user_id, selected_character, discord_webhook_url")
+      .in("user_id", userIds);
+
+    if (userSettingsError) {
+      console.error("Error fetching user settings:", userSettingsError);
+      continue; // Continue to the next batch
+    }
+
+    // Create a map of user settings for easy lookup
+    const userSettingsMap = new Map();
+    userSettingsList.forEach((settings) => {
+      userSettingsMap.set(settings.user_id, settings);
+    });
+
+    for (const task of tasks) {
+      const userId = task.user_id;
+
+      // Retrieve user settings from the map
+      const userSettings = userSettingsMap.get(userId);
+
+      let selectedCharacterIndex = 0; // Default to Professor Promptly
+      let webhookUrl = discordWebhookUrl; // Default to the environment variable
+
+      if (userSettings) {
+        selectedCharacterIndex = parseInt(
+          userSettings.selected_character || "0",
+          10
+        );
+        webhookUrl = userSettings.discord_webhook_url || discordWebhookUrl;
+      } else {
+        console.log(
+          `No user settings found for user ${userId}, defaulting to Professor Promptly and default webhook`
+        );
+      }
+
+      const creativeReminder = await generateCreativeReminder(
+        task.title,
+        selectedCharacterIndex
+      );
+      await sendNotification(
+        task.title,
+        creativeReminder,
+        characterPrompts[selectedCharacterIndex].name,
+        webhookUrl // Pass the webhook URL
+      );
+      console.log(`Notification sent for task: ${task.title}`);
+    }
+
+    page++; // Move to the next page
+    console.log(
+      `Processed page ${page}, tasks processed so far: ${page * BATCH_SIZE}`
     );
-    await sendNotification(
-      task.title,
-      creativeReminder,
-      characterPrompts[selectedCharacterIndex].name
-    );
-    console.log(`Notification sent for task: ${task.title}`);
-  }
+  } while (page * BATCH_SIZE < totalCount);
+
+  console.log("All tasks processed.");
 }
 
 // Run function on startup

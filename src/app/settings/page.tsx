@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { Input } from "@/components/ui/input";
 
 const characterOptions = [
   { value: "0", label: "Professor Promptly" },
@@ -31,6 +32,7 @@ const characterOptions = [
 export default function SettingsPage() {
   const [session, setSession] = useState<any>(null);
   const [selectedCharacter, setSelectedCharacter] = useState("0"); // Default character
+  const [discordWebhookUrl, setDiscordWebhookUrl] = useState("");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +53,8 @@ export default function SettingsPage() {
         try {
           const { data, error } = await supabase
             .from("user_settings")
-            .select("selected_character")
+
+            .select("selected_character, discord_webhook_url")
             .eq("user_id", session.user.id)
             .single();
 
@@ -62,6 +65,7 @@ export default function SettingsPage() {
             });
           } else if (data) {
             setSelectedCharacter(data.selected_character);
+            setDiscordWebhookUrl(data.discord_webhook_url || ""); // Initialize with existing value
           }
         } finally {
           setLoading(false);
@@ -83,6 +87,10 @@ export default function SettingsPage() {
     setSelectedCharacter(value);
   };
 
+  const handleWebhookUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDiscordWebhookUrl(e.target.value);
+  };
+
   const handleSaveSettings = async () => {
     if (session?.user?.id) {
       try {
@@ -92,6 +100,7 @@ export default function SettingsPage() {
             {
               user_id: session.user.id,
               selected_character: selectedCharacter,
+              discord_webhook_url: discordWebhookUrl,
             },
             { onConflict: "user_id" }
           )
@@ -160,6 +169,23 @@ export default function SettingsPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Discord Webhook URL Input */}
+              <div className="mb-4">
+                <label
+                  htmlFor="discordWebhookUrl"
+                  className="block text-gray-700 text-sm font-bold mb-2"
+                >
+                  Discord Webhook URL:
+                </label>
+                <Input
+                  type="text"
+                  id="discordWebhookUrl"
+                  placeholder="Enter your Discord Webhook URL"
+                  value={discordWebhookUrl}
+                  onChange={handleWebhookUrlChange}
+                />
               </div>
 
               {/* Save Button */}
