@@ -6,18 +6,19 @@ import type { Metadata } from "next";
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
-  display: "swap", // Optional: optimizes font loading
+  display: "swap",
 });
 
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-lora",
-  display: "swap", // Optional: optimizes font loading
+  display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Stella Bot",
   description: "A powerful AI assistant for your daily tasks",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -34,3 +35,4 @@ export default function RootLayout({
     </html>
   );
 }
+
