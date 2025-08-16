@@ -42,6 +42,4 @@ next-env.d.ts
 
 .temp
 
-# Next-PWA files
-sw.js
-workbox-*.js
+certificates
