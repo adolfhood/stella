@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import TaskCard from "./TaskCard";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Task = {
   id?: string; // Optional id for new tasks
@@ -418,21 +419,33 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           <TaskCard key={task.id} task={task as any}>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
               <div className="col-span-3">
-                <p
-                  className={`${
-                    statusColors[task.status as keyof typeof statusColors]
-                  } bg-none`}
-                >
-                  {task.title}
-                </p>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {task.description || "No description"}
-                </p>
-                {task.due_date && (
-                  <p className="text-xs text-muted-foreground">
-                    Due: {new Date(task.due_date).toLocaleString()}
-                  </p>
-                )}
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    checked={task.status === "completed"}
+                    onCheckedChange={(checked) => {
+                      const status = checked ? "completed" : "open";
+                      handleSaveStatus(task.id!, status);
+                    }}
+                    className="h-6 w-6 rounded-full border-primary text-primary ring-offset-background focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                  <div>
+                    <p
+                      className={`${
+                        statusColors[task.status as keyof typeof statusColors]
+                      } bg-none`}
+                    >
+                      {task.title}
+                    </p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {task.description || "No description"}
+                    </p>
+                    {task.due_date && (
+                      <p className="text-xs text-muted-foreground">
+                        Due: {new Date(task.due_date).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="col-span-1">
                 <Select
