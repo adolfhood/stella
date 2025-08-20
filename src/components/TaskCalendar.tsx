@@ -7,14 +7,7 @@ import { format, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import TaskCard from "./TaskCard";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string;
-};
+import { Task } from "@/types/Task";
 
 interface TaskCalendarProps {
   tasks: Task[]; // Tasks are now passed as props

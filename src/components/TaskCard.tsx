@@ -1,13 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string;
-};
+import { Task } from "@/types/Task";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
