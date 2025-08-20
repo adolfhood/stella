@@ -6,14 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string;
-};
+import { Task } from "@/types/Task";
 
 interface WeeklyTaskListProps {
   tasks: Task[]; // Tasks are now passed as props

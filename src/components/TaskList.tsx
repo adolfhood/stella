@@ -36,15 +36,7 @@ import TaskCard from "./TaskCard";
 import { Checkbox } from "@/components/ui/checkbox";
 import RepeatModal from "./RepeatModal"; // Import RepeatModal
 
-type Task = {
-  id?: string; // Optional id for new tasks
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string; // Add status
-  repeat_config: any | null; // Add repeat_config
-};
+import { Task } from "@/types/Task";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",

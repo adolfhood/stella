@@ -20,14 +20,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string; // Add status
-};
+import { Task } from "@/types/Task";
 
 export default function HomePage() {
   const [session, setSession] = useState<any>(null);
@@ -131,7 +124,11 @@ export default function HomePage() {
             <WeeklyTaskList tasks={tasks} />
           </TabsContent>
           <TabsContent value="daily" className="mt-2">
-            <DailyTaskList selectedDate={selectedDate} tasks={tasks} setSelectedDate={setSelectedDate} />
+            <DailyTaskList
+              selectedDate={selectedDate}
+              tasks={tasks}
+              setSelectedDate={setSelectedDate}
+            />
           </TabsContent>
         </Tabs>
       </main>
@@ -141,4 +138,3 @@ export default function HomePage() {
     </div>
   );
 }
-

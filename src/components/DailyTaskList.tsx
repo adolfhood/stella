@@ -7,14 +7,7 @@ import { CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import TaskCard from "./TaskCard";
 
-type Task = {
-  id: string;
-  title: string;
-  description: string | null;
-  due_date: string | null;
-  due_time: string | null;
-  status: string;
-};
+import { Task } from "@/types/Task";
 
 interface DailyTaskListProps {
   tasks: Task[]; // Tasks are now passed as props
