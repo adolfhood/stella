@@ -10,7 +10,8 @@
     "scm": "npx supabase migration new",
     "sdp": "npx supabase db push",
     "cron": "node ./src/lib/discord-bot/index.ts",
-    "shad": "npx shadcn@latest add"
+    "shad": "npx shadcn@latest add",
+    "test": "jest"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -22,6 +23,7 @@
     "@radix-ui/react-popover": "^1.1.14",
     "@radix-ui/react-select": "^2.2.5",
     "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.12",
     "@supabase/supabase-js": "^2.53.0",
     "class-variance-authority": "^0.7.1",
@@ -36,14 +38,18 @@
     "react-day-picker": "^9.8.1",
     "react-dom": "19.1.0",
     "sonner": "^2.0.7",
+    "supabase": "^2.34.3",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jest": "^30.0.5",
     "tailwindcss": "^4.1.11",
+    "ts-jest": "^29.4.1",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"
   }

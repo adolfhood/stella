@@ -34,6 +34,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import TaskCard from "./TaskCard";
 import { Checkbox } from "@/components/ui/checkbox";
+import RepeatModal from "./RepeatModal"; // Import RepeatModal
 
 type Task = {
   id?: string; // Optional id for new tasks
@@ -42,6 +43,7 @@ type Task = {
   due_date: string | null;
   due_time: string | null;
   status: string; // Add status
+  repeat_config: any | null; // Add repeat_config
 };
 
 const statusColors = {
@@ -69,6 +71,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const [editTask, setEditTask] = useState<Task | null>(null); // Null for adding, Task for editing
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [showRepeatModal, setShowRepeatModal] = useState(false);
 
   const [taskForm, setTaskForm] = useState<Task>({
     title: "",
@@ -76,6 +79,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     due_date: null,
     due_time: null,
     status: "open",
+    repeat_config: null, // Initialize repeat_config
   });
 
   const resetTaskForm = () => {
@@ -85,6 +89,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
       due_date: null,
       due_time: null,
       status: "open",
+      repeat_config: null,
     });
   };
 
@@ -98,6 +103,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     setOpen(false);
     resetTaskForm();
     setEditTask(null);
+    setShowRepeatModal(false); // Close repeat modal too
   };
 
   const handleInputChange = (
@@ -113,6 +119,29 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
 
   const handleStatusChange = (status: string) => {
     setTaskForm((prev) => ({ ...prev, status: status }));
+  };
+
+  const handleToggleRepeatModal = () => {
+    const newValue = !showRepeatModal;
+
+    if (newValue === false) {
+      // Ability to remove repeat_config when necessary
+      setTaskForm({
+        ...taskForm,
+        repeat_config: null,
+      });
+      setShowRepeatModal(false);
+    } else {
+      setShowRepeatModal(true);
+    }
+  };
+
+  const handleSaveRepeatConfig = (repeatConfig: any) => {
+    setTaskForm((prev) => ({ ...prev, repeat_config: repeatConfig }));
+  };
+
+  const handleCancelRepeatConfig = () => {
+    setShowRepeatModal(false);
   };
 
   const handleAddTask = async () => {
@@ -140,6 +169,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
         due_time: taskForm.due_time,
         user_id: data.session?.user.id,
         status: taskForm.status,
+        repeat_config: taskForm.repeat_config, // Save repeat_config
       });
 
       if (error) {
@@ -167,6 +197,13 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const handleEditTask = (task: Task) => {
     setTaskForm(task);
     setEditTask(task);
+
+    if (task.repeat_config) {
+      setShowRepeatModal(true);
+    } else {
+      setShowRepeatModal(false);
+    }
+
     setOpen(true);
   };
 
@@ -194,6 +231,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           due_date: combinedDateTime,
           due_time: taskForm.due_time,
           status: taskForm.status,
+          repeat_config: taskForm.repeat_config, // Update repeat_config
         })
         .eq("id", editTask!.id);
 
@@ -369,31 +407,25 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                 <Input
                   type="time"
                   id="due_time"
-                  value={taskForm.due_time as any}
+                  value={(taskForm.due_time as any) || ""}
                   onChange={handleInputChange}
                   className="col-span-3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Status
-                </Label>
-                <Select
-                  value={taskForm.status}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* Removed repeat interval select */}
               </div>
             </div>
+            <Button onClick={handleToggleRepeatModal}>
+              {showRepeatModal ? "Clear Repeat" : "Set Repeat"}
+            </Button>{" "}
+            {/* Open Repeat Modal */}
+            {showRepeatModal && (
+              <RepeatModal
+                onSave={handleSaveRepeatConfig}
+                onCancel={handleCancelRepeatConfig}
+              />
+            )}
             <div className="flex justify-end space-x-2">
               <Button
                 variant="secondary"
