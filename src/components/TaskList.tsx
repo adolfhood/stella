@@ -37,6 +37,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import RepeatModal from "./RepeatModal"; // Import RepeatModal
 
 import { Task } from "@/types/Task";
+import TagsDialog from "./TagsDialog";
+import { useTagContext } from "@/contexts/TagContext";
+import TagSelector from "./TagSelector";
+import { Badge } from "@/components/ui/badge";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
@@ -64,6 +68,8 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [showRepeatModal, setShowRepeatModal] = useState(false);
+  const { tags } = useTagContext();
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const [taskForm, setTaskForm] = useState<Task>({
     title: "",
@@ -72,6 +78,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     due_time: null,
     status: "open",
     repeat_config: null, // Initialize repeat_config
+    tag_ids: [],
   });
 
   const resetTaskForm = () => {
@@ -82,7 +89,9 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
       due_time: null,
       status: "open",
       repeat_config: null,
+      tag_ids: [],
     });
+    setSelectedTags([]);
   };
 
   const handleOpenDialog = () => {
@@ -162,6 +171,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
         user_id: data.session?.user.id,
         status: taskForm.status,
         repeat_config: taskForm.repeat_config, // Save repeat_config
+        tag_ids: taskForm.tag_ids,
       });
 
       if (error) {
@@ -189,6 +199,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const handleEditTask = (task: Task) => {
     setTaskForm(task);
     setEditTask(task);
+    setSelectedTags(task.tag_ids || []); // Initialize selected tags for editing
 
     if (task.repeat_config) {
       setShowRepeatModal(true);
@@ -224,6 +235,7 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           due_time: taskForm.due_time,
           status: taskForm.status,
           repeat_config: taskForm.repeat_config, // Update repeat_config
+          tag_ids: taskForm.tag_ids,
         })
         .eq("id", editTask!.id);
 
@@ -308,134 +320,156 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
   };
 
+  const handleTagChange = (tagIds: string[]) => {
+    console.log(tagIds);
+    setSelectedTags(tagIds);
+    setTaskForm((prev) => ({ ...prev, tag_ids: tagIds }));
+  };
+
   return (
     <div className="container mx-auto py-2">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Tasks</h2>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-blue-500 hover:bg-blue-700 text-white"
-              onClick={handleOpenDialog}
-            >
-              Add Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-sm sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>{editTask ? "Edit Task" : "Add Task"}</DialogTitle>
-              <DialogDescription>
-                {editTask
-                  ? "Edit the fields for this task."
-                  : "Create a new task to add to your list."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title
-                </Label>
-                <Input
-                  type="text"
-                  id="title"
-                  value={taskForm.title}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  value={taskForm.description || ""}
-                  onChange={handleInputChange}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="due_date" className="text-right">
-                  Due Date
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "col-span-3 justify-start text-left font-normal text-sm",
-                        !taskForm.due_date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {taskForm.due_date ? (
-                        format(new Date(taskForm.due_date), "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        taskForm.due_date
-                          ? new Date(taskForm.due_date)
-                          : undefined
-                      }
-                      onSelect={handleDateChange}
-                      disabled={(date) =>
-                        date < new Date(new Date().toDateString())
-                      }
-                      initialFocus
+        <div className="flex gap-2">
+          <TagsDialog />
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button
+                className="bg-blue-500 hover:bg-blue-700 text-white"
+                onClick={handleOpenDialog}
+              >
+                Add Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>{editTask ? "Edit Task" : "Add Task"}</DialogTitle>
+                <DialogDescription>
+                  {editTask
+                    ? "Edit the fields for this task."
+                    : "Create a new task to add to your list."}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="title" className="text-right">
+                    Title
+                  </Label>
+                  <Input
+                    type="text"
+                    id="title"
+                    value={taskForm.title}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="description" className="text-right">
+                    Description
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={taskForm.description || ""}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="due_date" className="text-right">
+                    Due Date
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "col-span-3 justify-start text-left font-normal text-sm",
+                          !taskForm.due_date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {taskForm.due_date ? (
+                          format(new Date(taskForm.due_date), "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          taskForm.due_date
+                            ? new Date(taskForm.due_date)
+                            : undefined
+                        }
+                        onSelect={handleDateChange}
+                        disabled={(date) =>
+                          date < new Date(new Date().toDateString())
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="due_time" className="text-right">
+                    Time
+                  </Label>
+                  <Input
+                    type="time"
+                    id="due_time"
+                    value={(taskForm.due_time as any) || ""}
+                    onChange={handleInputChange}
+                    className="col-span-3"
+                  />
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="tags" className="text-right">
+                    Tags
+                  </Label>
+                  <div className="col-span-3 relative z-10">
+                    <TagSelector
+                      selectedTags={selectedTags}
+                      onChange={handleTagChange}
                     />
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 items-center gap-4">
+                  {/* Removed repeat interval select */}
+                </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="due_time" className="text-right">
-                  Time
-                </Label>
-                <Input
-                  type="time"
-                  id="due_time"
-                  value={(taskForm.due_time as any) || ""}
-                  onChange={handleInputChange}
-                  className="col-span-3"
+              {/* <Button onClick={handleToggleRepeatModal}>
+                {showRepeatModal ? "Clear Repeat" : "Set Repeat"}
+              </Button>{" "} */}
+              {/* Open Repeat Modal */}
+              {showRepeatModal && (
+                <RepeatModal
+                  onSave={handleSaveRepeatConfig}
+                  onCancel={handleCancelRepeatConfig}
                 />
+              )}
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="secondary"
+                  onClick={handleCloseDialog}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="bg-green-500 hover:bg-green-700 text-white"
+                >
+                  {editTask ? "Save" : "Add"}
+                </Button>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                {/* Removed repeat interval select */}
-              </div>
-            </div>
-            <Button onClick={handleToggleRepeatModal}>
-              {showRepeatModal ? "Clear Repeat" : "Set Repeat"}
-            </Button>{" "}
-            {/* Open Repeat Modal */}
-            {showRepeatModal && (
-              <RepeatModal
-                onSave={handleSaveRepeatConfig}
-                onCancel={handleCancelRepeatConfig}
-              />
-            )}
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="secondary"
-                onClick={handleCloseDialog}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="bg-green-500 hover:bg-green-700 text-white"
-              >
-                {editTask ? "Save" : "Add"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <ul className="space-y-2">
@@ -470,6 +504,17 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
                     )}
                   </div>
                 </div>
+                {task.tag_ids && task.tag_ids.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {tags
+                      .filter((tag) => task.tag_ids?.includes(tag.id))
+                      .map((tag) => (
+                        <Badge key={tag.id} variant="secondary">
+                          {tag.name}
+                        </Badge>
+                      ))}
+                  </div>
+                )}
               </div>
               <div className="col-span-1">
                 <Select

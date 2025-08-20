@@ -2,6 +2,7 @@ import { Inter, Lora } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
+import { TagProvider } from "@/contexts/TagContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,10 +30,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
       <body className="font-sans" style={{ fontFamily: "var(--font-inter)" }}>
-        {children}
+        <TagProvider>{children}</TagProvider>
         <Toaster />
       </body>
     </html>
   );
 }
-

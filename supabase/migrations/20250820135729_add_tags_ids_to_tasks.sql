@@ -1,0 +1,2 @@
+ALTER TABLE tasks
+ADD COLUMN tag_ids UUID[]

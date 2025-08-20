@@ -6,4 +6,5 @@ export type Task = {
   due_time: string | null;
   status: string; // Add status
   repeat_config: any | null; // Add repeat_config
+  tag_ids: string[] | null;
 };

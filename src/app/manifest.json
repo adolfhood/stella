@@ -1,7 +1,7 @@
 {
   "name": "Stella Bot",
   "short_name": "StellaBot",
-  "start_url": "/",
+  "start_url": "https://adolfhood.github.io/stella/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
