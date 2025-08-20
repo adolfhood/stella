@@ -1,8 +1,10 @@
+// src/lib/discord-bot/index.ts
 import * as dotenv from "dotenv";
 dotenv.config();
 
 import { createClient } from "@supabase/supabase-js";
 import fetch from "node-fetch";
+import reopenRepeatingTasks from "./repeat-logic.mjs"; // Import the function
 
 // Load environment variables (replace with your preferred method)
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -11,6 +13,11 @@ const discordWebhookUrl = process.env.DISCORD_WEBHOOK_URL || ""; // Webhook URL
 const geminiApiKey = process.env.GEMINI_API_KEY; // Add Gemini API Key
 
 const characterPrompts = [
+  {
+    name: "Stella",
+    prompt:
+      "You are a personal assistant/secretary. Give the user a reminder about task [taskName], due soon.",
+  },
   {
     name: "Professor Promptly",
     prompt:
@@ -121,7 +128,7 @@ async function generateCreativeReminder(
   timeFrame: string
 ): Promise<string> {
   const prompt =
-    characterPrompts[characterIndex].prompt.replace("[taskName", taskName) +
+    characterPrompts[characterIndex].prompt.replace("[taskName]", taskName) +
     ` This is a reminder for ${timeFrame}.` +
     "Keep it brief and engaging.";
 
@@ -317,5 +324,15 @@ async function processTasks(tasks: any[], timeFrame: string) {
 
 main();
 setInterval(main, 60000);
+
+// Schedule the repeating task check to run daily at midnight
+const midnight = new Date();
+midnight.setHours(24, 0, 0, 0); // Midnight tonight
+const timeUntilMidnight = midnight.getTime() - new Date().getTime();
+
+setTimeout(() => {
+  reopenRepeatingTasks(); // Run at midnight
+  setInterval(reopenRepeatingTasks, 24 * 60 * 60 * 1000); // Then run every 24 hours
+}, timeUntilMidnight);
 
 console.log("Discord webhook integration started.");

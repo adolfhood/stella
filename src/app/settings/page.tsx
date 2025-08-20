@@ -17,7 +17,7 @@ import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 
 const characterOptions = [
-  { value: "0", label: "Professor Promptly" },
+  { value: "0", label: "Stella" },
   { value: "1", label: "Motivatron 5000" },
   { value: "2", label: "Sarcastic Sammy" },
   { value: "3", label: "Zen Master Zennith" },
@@ -27,6 +27,7 @@ const characterOptions = [
   { value: "7", label: "Space Cadet Sparkle" },
   { value: "8", label: "Gloomy Gus Grimsworth" },
   { value: "9", label: "Crazy Carl Countdown" },
+  { value: "10", label: "Professor Promptly" },
 ];
 
 export default function SettingsPage() {
