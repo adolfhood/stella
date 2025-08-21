@@ -115,7 +115,7 @@ export default function HomePage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="tasks" className="mt-2">
-            <TaskList tasks={tasks} fetchTasks={fetchTasks} />
+            <TaskList />
           </TabsContent>
           <TabsContent value="calendar" className="mt-2">
             <TaskCalendar tasks={tasks} />

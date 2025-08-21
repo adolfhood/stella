@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,23 @@ import { useTagContext } from "@/contexts/TagContext";
 import TagSelector from "./TagSelector";
 import { Badge } from "@/components/ui/badge";
 import { useTaskContext } from "@/contexts/TaskContext";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
@@ -119,25 +136,6 @@ export default function TaskList() {
 
   const handleDateChange = (date: Date | undefined) => {
     setTaskForm((prev) => ({ ...prev, due_date: date?.toISOString() || null }));
-  };
-
-  const handleStatusChange = (status: string) => {
-    setTaskForm((prev) => ({ ...prev, status: status }));
-  };
-
-  const handleToggleRepeatModal = () => {
-    const newValue = !showRepeatModal;
-
-    if (newValue === false) {
-      // Ability to remove repeat_config when necessary
-      setTaskForm({
-        ...taskForm,
-        repeat_config: null,
-      });
-      setShowRepeatModal(false);
-    } else {
-      setShowRepeatModal(true);
-    }
   };
 
   const handleSaveRepeatConfig = (repeatConfig: any) => {
@@ -324,6 +322,37 @@ export default function TaskList() {
     return result;
   }, [tasks, searchQuery, sortBy, sortOrder]);
 
+  const [reorderedTasks, setReorderedTasks] = useState([
+    ...filteredAndSortedTasks,
+  ]);
+
+  // Update reorderedTasks whenever filteredAndSortedTasks changes
+  useEffect(() => {
+    setReorderedTasks([...filteredAndSortedTasks]);
+  }, [filteredAndSortedTasks]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = reorderedTasks.findIndex(
+        (task) => task.id === active.id
+      );
+      const newIndex = reorderedTasks.findIndex((task) => task.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setReorderedTasks((tasks) => arrayMove(tasks, oldIndex, newIndex));
+      }
+    }
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   return (
     <div className="container mx-auto py-2">
       <div className="flex justify-between items-center mb-4">
@@ -508,89 +537,31 @@ export default function TaskList() {
         </div>
       </div>
 
-      <ul className="space-y-2">
-        {filteredAndSortedTasks.map((task) => (
-          <TaskCard key={task.id} task={task as any}>
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
-              <div className="col-span-3">
-                <div className="flex items-start gap-2">
-                  <Checkbox
-                    checked={task.status === "completed"}
-                    onCheckedChange={(checked) => {
-                      const status = checked ? "completed" : "open";
-                      handleSaveStatus(task.id!, status);
-                    }}
-                    className="h-6 w-6 rounded-full border-primary text-primary ring-offset-background focus-visible:ring-ring focus-visible:ring-offset-2"
-                  />
-                  <div>
-                    <p
-                      className={`${
-                        statusColors[task.status as keyof typeof statusColors]
-                      } bg-none`}
-                    >
-                      {task.title}
-                    </p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {task.description || "No description"}
-                    </p>
-                    {task.due_date && (
-                      <p className="text-xs text-muted-foreground">
-                        Due: {new Date(task.due_date).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                {task.tag_ids && task.tag_ids.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {tags
-                      .filter((tag) => task.tag_ids?.includes(tag.id))
-                      .map((tag) => (
-                        <Badge key={tag.id} variant="secondary">
-                          {tag.name}
-                        </Badge>
-                      ))}
-                  </div>
-                )}
-              </div>
-              <div className="col-span-1">
-                <Select
-                  value={task.status}
-                  onValueChange={(status) => handleSaveStatus(task.id!, status)}
-                >
-                  <SelectTrigger className="w-full text-sm">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleEditTask(task)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setDeleteTaskId(task.id!);
-                    setDeleteOpen(true);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </TaskCard>
-        ))}
-      </ul>
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+        sensors={sensors}
+      >
+        <SortableContext
+          items={reorderedTasks.map((task) => task.id!)}
+          strategy={verticalListSortingStrategy}
+        >
+          <ul className="space-y-2">
+            {reorderedTasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task as any}
+                handleSaveStatus={handleSaveStatus}
+                handleEditTask={handleEditTask}
+                setDeleteTaskId={setDeleteTaskId}
+                setDeleteOpen={setDeleteOpen}
+                tags={tags}
+                statusColors={statusColors}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -621,3 +592,122 @@ export default function TaskList() {
     </div>
   );
 }
+
+const TaskItem = ({
+  task,
+  handleSaveStatus,
+  handleEditTask,
+  setDeleteTaskId,
+  setDeleteOpen,
+  tags,
+  statusColors,
+}: {
+  task: Task;
+  handleSaveStatus: (taskId: string, status: string) => Promise<void>;
+  handleEditTask: (task: Task) => void;
+  setDeleteTaskId: (taskId: string) => void;
+  setDeleteOpen: (open: boolean) => void;
+  tags: any[];
+  statusColors: any;
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id! });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <TaskCard task={task as any}>
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
+          <div className="col-span-3">
+            <div className="flex items-start gap-2">
+              <Checkbox
+                checked={task.status === "completed"}
+                onCheckedChange={(checked) => {
+                  const status = checked ? "completed" : "open";
+                  handleSaveStatus(task.id!, status);
+                }}
+                className="h-6 w-6 rounded-full border-primary text-primary ring-offset-background focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <div>
+                <p
+                  className={`${
+                    (statusColors as any)[
+                      task.status as keyof typeof statusColors
+                    ]
+                  } bg-none`}
+                >
+                  {task.title}
+                </p>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {task.description || "No description"}
+                </p>
+                {task.due_date && (
+                  <p className="text-xs text-muted-foreground">
+                    Due: {new Date(task.due_date).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+            {task.tag_ids && task.tag_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {(tags as any)
+                  .filter((tag: any) => task.tag_ids?.includes(tag.id))
+                  .map((tag: any) => (
+                    <Badge key={tag.id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ))}
+              </div>
+            )}
+          </div>
+          <div className="col-span-1">
+            <Select
+              value={task.status}
+              onValueChange={(status) => handleSaveStatus(task.id!, status)}
+            >
+              <SelectTrigger className="w-full text-sm">
+                <SelectValue placeholder="Select a status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => handleEditTask(task)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                setDeleteTaskId(task.id!);
+                setDeleteOpen(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </TaskCard>
+    </div>
+  );
+};
