@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Edit, Trash2 } from "lucide-react";
+import { CalendarIcon, Edit, Trash2, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -65,7 +65,8 @@ export default function TaskList() {
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const { tags } = useTagContext();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const { tasks, addTask, updateTask, deleteTask, fetchTasks } = useTaskContext();
+  const { tasks, addTask, updateTask, deleteTask, fetchTasks } =
+    useTaskContext();
 
   const [taskForm, setTaskForm] = useState<Omit<Task, "id" | "user_id">>({
     title: "",
@@ -76,6 +77,12 @@ export default function TaskList() {
     repeat_config: null, // Initialize repeat_config
     tag_ids: [],
   });
+
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState("");
+  // Sorting functionality
+  const [sortBy, setSortBy] = useState<"title" | "due_date">("due_date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const resetTaskForm = () => {
     setTaskForm({
@@ -287,6 +294,36 @@ export default function TaskList() {
     setTaskForm((prev) => ({ ...prev, tag_ids: tagIds }));
   };
 
+  const filteredAndSortedTasks = useMemo(() => {
+    let result = [...tasks];
+
+    // Apply search filter
+    if (searchQuery) {
+      result = result.filter(
+        (task) =>
+          task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === "title") {
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortBy === "due_date") {
+        const dateA = a.due_date ? new Date(a.due_date).getTime() : 0;
+        const dateB = b.due_date ? new Date(b.due_date).getTime() : 0;
+        comparison = dateA - dateB;
+      }
+
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+
+    return result;
+  }, [tasks, searchQuery, sortBy, sortOrder]);
+
   return (
     <div className="container mx-auto py-2">
       <div className="flex justify-between items-center mb-4">
@@ -433,8 +470,46 @@ export default function TaskList() {
         </div>
       </div>
 
+      {/* Search and Sort Controls */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="relative flex items-center">
+          <Input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pr-10"
+          />
+          <Search className="h-4 w-4 absolute right-3 text-gray-500" />
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="sort">Sort by:</Label>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as any)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="title">Title</SelectItem>
+              <SelectItem value="due_date">Due Date</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          >
+            {sortOrder === "asc" ? "Ascending" : "Descending"}
+          </Button>
+        </div>
+      </div>
+
       <ul className="space-y-2">
-        {tasks.map((task) => (
+        {filteredAndSortedTasks.map((task) => (
           <TaskCard key={task.id} task={task as any}>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-center relative">
               <div className="col-span-3">
