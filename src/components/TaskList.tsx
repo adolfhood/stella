@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +40,7 @@ import TagsDialog from "./TagsDialog";
 import { useTagContext } from "@/contexts/TagContext";
 import TagSelector from "./TagSelector";
 import { Badge } from "@/components/ui/badge";
+import { useTaskContext } from "@/contexts/TaskContext";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
@@ -56,12 +56,7 @@ const statusBorderColors = {
   cancelled: "border-red-300",
 };
 
-type TaskListProps = {
-  tasks: Task[];
-  fetchTasks: () => Promise<void>;
-};
-
-export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
+export default function TaskList() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editTask, setEditTask] = useState<Task | null>(null); // Null for adding, Task for editing
@@ -70,8 +65,9 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
   const [showRepeatModal, setShowRepeatModal] = useState(false);
   const { tags } = useTagContext();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { tasks, addTask, updateTask, deleteTask, fetchTasks } = useTaskContext();
 
-  const [taskForm, setTaskForm] = useState<Task>({
+  const [taskForm, setTaskForm] = useState<Omit<Task, "id" | "user_id">>({
     title: "",
     description: "",
     due_date: null,
@@ -145,10 +141,8 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     setShowRepeatModal(false);
   };
 
-  const handleAddTask = async () => {
+  const handleCreateTask = async () => {
     setLoading(true);
-
-    const { data } = await supabase.auth.getSession();
 
     // Combine date and time
     let combinedDateTime: string | null = null;
@@ -163,29 +157,20 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
 
     try {
-      const { error } = await supabase.from("tasks").insert({
+      await addTask({
         title: taskForm.title,
         description: taskForm.description,
         due_date: combinedDateTime,
         due_time: taskForm.due_time,
-        user_id: data.session?.user.id,
         status: taskForm.status,
         repeat_config: taskForm.repeat_config, // Save repeat_config
         tag_ids: taskForm.tag_ids,
       });
 
-      if (error) {
-        console.error("Error adding task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error adding the task.",
-        });
-      } else {
-        handleCloseDialog();
-        fetchTasks(); // Refresh task list
-        toast.success("Task added successfully!", {
-          description: "The task has been added to your list.",
-        });
-      }
+      handleCloseDialog();
+      toast.success("Task added successfully!", {
+        description: "The task has been added to your list.",
+      });
     } catch (error) {
       console.error("Error adding task:", error);
       toast.error("Uh oh! Something went wrong.", {
@@ -226,9 +211,9 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
 
     try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
+      if (editTask) {
+        await updateTask({
+          ...editTask,
           title: taskForm.title,
           description: taskForm.description,
           due_date: combinedDateTime,
@@ -236,21 +221,13 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
           status: taskForm.status,
           repeat_config: taskForm.repeat_config, // Update repeat_config
           tag_ids: taskForm.tag_ids,
-        })
-        .eq("id", editTask!.id);
-
-      if (error) {
-        console.error("Error editing task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error editing the task.",
-        });
-      } else {
-        handleCloseDialog();
-        fetchTasks();
-        toast.success("Task edited successfully!", {
-          description: "The task has been updated in your list.",
         });
       }
+
+      handleCloseDialog();
+      toast.success("Task edited successfully!", {
+        description: "The task has been updated in your list.",
+      });
     } catch (error) {
       console.error("Error editing task:", error);
       toast.error("Uh oh! Something went wrong.", {
@@ -261,54 +238,15 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
   };
 
-  const handleSubmit = () => {
-    if (editTask) {
-      handleSaveEdit();
-    } else {
-      handleAddTask();
-    }
-  };
-
-  const handleSaveStatus = async (taskId: string, status: string) => {
+  const handleDeleteTask = async () => {
     try {
-      const { error } = await supabase
-        .from("tasks")
-        .update({
-          status: status,
-        })
-        .eq("id", taskId);
-
-      if (error) {
-        console.error("Error editing task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error editing the task.",
-        });
-      } else {
-        fetchTasks();
+      if (deleteTaskId) {
+        await deleteTask(deleteTaskId);
       }
-    } catch (error) {
-      console.error("Error editing task:", error);
-      toast.error("Uh oh! Something went wrong.", {
-        description: "There was an error editing the task.",
+
+      toast.success("Task deleted successfully!", {
+        description: "The task has been deleted from your list.",
       });
-    }
-  };
-
-  const handleDeleteTask = async (taskId: string) => {
-    try {
-      const { error } = await supabase.from("tasks").delete().eq("id", taskId);
-
-      if (error) {
-        console.error("Error deleting task:", error);
-        toast.error("Uh oh! Something went wrong.", {
-          description: "There was an error deleting the task.",
-        });
-      } else {
-        fetchTasks(); // Refresh task list
-        toast.success("Task deleted successfully!", {
-          description: "The task has been deleted from your list.",
-        });
-      }
     } catch (error) {
       console.error("Error deleting task:", error);
       toast.error("Uh oh! Something went wrong.", {
@@ -320,8 +258,31 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
     }
   };
 
+  const handleSubmit = () => {
+    if (editTask) {
+      handleSaveEdit();
+    } else {
+      handleCreateTask();
+    }
+  };
+
+  const handleSaveStatus = async (taskId: string, status: string) => {
+    try {
+      if (editTask) {
+        await updateTask({
+          ...editTask,
+          status: status,
+        });
+      }
+    } catch (error) {
+      console.error("Error editing task:", error);
+      toast.error("Uh oh! Something went wrong.", {
+        description: "There was an error editing the task.",
+      });
+    }
+  };
+
   const handleTagChange = (tagIds: string[]) => {
-    console.log(tagIds);
     setSelectedTags(tagIds);
     setTaskForm((prev) => ({ ...prev, tag_ids: tagIds }));
   };
@@ -573,7 +534,9 @@ export default function TaskList({ tasks, fetchTasks }: TaskListProps) {
             <Button
               variant="destructive"
               disabled={loading}
-              onClick={() => handleDeleteTask(deleteTaskId!)}
+              onClick={() => {
+                handleDeleteTask();
+              }}
             >
               Delete
             </Button>

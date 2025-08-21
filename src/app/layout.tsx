@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { TagProvider } from "@/contexts/TagContext";
+import { TaskProvider } from "@/contexts/TaskContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -30,7 +31,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
       <body className="font-sans" style={{ fontFamily: "var(--font-inter)" }}>
-        <TagProvider>{children}</TagProvider>
+        <TaskProvider>
+          <TagProvider>{children}</TagProvider>
+        </TaskProvider>
         <Toaster />
       </body>
     </html>

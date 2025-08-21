@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-
+import { Badge } from "@/components/ui/badge";
 import { Task } from "@/types/Task";
+import { useTagContext } from "@/contexts/TagContext";
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
@@ -22,6 +23,8 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, children }: TaskCardProps) {
+  const { tags } = useTagContext();
+
   return (
     <Card
       key={task.id}
@@ -51,6 +54,17 @@ export default function TaskCard({ task, children }: TaskCardProps) {
                 </p>
               )}
             </div>
+            {task.tag_ids && task.tag_ids.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {tags
+                  .filter((tag) => task.tag_ids?.includes(tag.id))
+                  .map((tag) => (
+                    <Badge key={tag.id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ))}
+              </div>
+            )}
             <div className="flex justify-center">
               <div
                 className={`${
