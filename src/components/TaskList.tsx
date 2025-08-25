@@ -59,6 +59,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { debounce } from "lodash"; // Import debounce
 
 const statusColors = {
   open: "bg-gray-50 text-gray-700",
@@ -377,7 +378,7 @@ export default function TaskList() {
 
         // Update task order in context
         const newTaskOrder = newReorderedTasks.map((task) => task.id!);
-        await updateTaskSorting(sortBy, sortOrder, newTaskOrder); // Save new order
+        debouncedUpdateTaskSorting(sortBy, sortOrder, newTaskOrder); // Save new order
       }
     }
   };
@@ -392,13 +393,20 @@ export default function TaskList() {
   // Function to update sorting preferences
   const handleSortChange = async (newSortBy: "title" | "due_date") => {
     setSortBy(newSortBy);
-    await updateTaskSorting(newSortBy, sortOrder, null);
+    debouncedUpdateTaskSorting(newSortBy, sortOrder, null);
   };
 
   const handleSortOrderChange = async (newSortOrder: "asc" | "desc") => {
     setSortOrder(newSortOrder);
-    await updateTaskSorting(sortBy, newSortOrder, null);
+    debouncedUpdateTaskSorting(sortBy, newSortOrder, null);
   };
+
+  const debouncedUpdateTaskSorting = useCallback(
+    debounce(async (newSortBy: any, newSortOrder: any, newTaskOrder: any) => {
+      await updateTaskSorting(newSortBy, newSortOrder, newTaskOrder);
+    }, 300),
+    [updateTaskSorting]
+  );
 
   return (
     <div className="container mx-auto py-2">
@@ -577,9 +585,10 @@ export default function TaskList() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() =>
-              handleSortOrderChange(sortOrder === "asc" ? "desc" : "asc")
-            }
+            onClick={() => {
+              const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
+              handleSortOrderChange(newSortOrder);
+            }}
           >
             {sortOrder === "asc" ? "Ascending" : "Descending"}
           </Button>
