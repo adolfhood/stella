@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { TagProvider } from "@/contexts/TagContext";
 import { TaskProvider } from "@/contexts/TaskContext";
+import { TaskSortProvider } from "@/contexts/TaskSortContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
       <body className="font-sans" style={{ fontFamily: "var(--font-inter)" }}>
         <TaskProvider>
-          <TagProvider>{children}</TagProvider>
+          <TaskSortProvider>
+            <TagProvider>{children}</TagProvider>
+          </TaskSortProvider>
         </TaskProvider>
         <Toaster />
       </body>

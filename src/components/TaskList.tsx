@@ -41,6 +41,7 @@ import { useTagContext } from "@/contexts/TagContext";
 import TagSelector from "./TagSelector";
 import { Badge } from "@/components/ui/badge";
 import { useTaskContext } from "@/contexts/TaskContext";
+import { useTaskSortContext } from "@/contexts/TaskSortContext"; // Import TaskSortContext
 import {
   DndContext,
   closestCenter,
@@ -84,6 +85,13 @@ export default function TaskList() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { tasks, addTask, updateTask, deleteTask, fetchTasks } =
     useTaskContext();
+  const {
+    sortBy: contextSortBy,
+    sortOrder: contextSortOrder,
+    taskOrder: contextTaskOrder,
+    fetchTaskSorting,
+    updateTaskSorting,
+  } = useTaskSortContext(); // Use TaskSortContext
 
   const [taskForm, setTaskForm] = useState<Omit<Task, "id" | "user_id">>({
     title: "",
@@ -98,8 +106,12 @@ export default function TaskList() {
   // Search functionality
   const [searchQuery, setSearchQuery] = useState("");
   // Sorting functionality
-  const [sortBy, setSortBy] = useState<"title" | "due_date">("due_date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState<"title" | "due_date">(
+    (contextSortBy as "title" | "due_date") || "due_date"
+  ); // Initialize from context
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    (contextSortOrder as "asc" | "desc") || "asc"
+  ); // Initialize from context
 
   const resetTaskForm = () => {
     setTaskForm({
@@ -292,7 +304,11 @@ export default function TaskList() {
     setTaskForm((prev) => ({ ...prev, tag_ids: tagIds }));
   };
 
-  const filteredAndSortedTasks = useMemo(() => {
+  const [filteredAndSortedTasks, setFilteredAndSortedTasks] = useState<Task[]>(
+    []
+  );
+
+  useEffect(() => {
     let result = [...tasks];
 
     // Apply search filter
@@ -319,19 +335,34 @@ export default function TaskList() {
       return sortOrder === "asc" ? comparison : -comparison;
     });
 
-    return result;
+    setFilteredAndSortedTasks(result);
   }, [tasks, searchQuery, sortBy, sortOrder]);
 
-  const [reorderedTasks, setReorderedTasks] = useState([
-    ...filteredAndSortedTasks,
-  ]);
+  const [reorderedTasks, setReorderedTasks] = useState<Task[]>([]);
 
   // Update reorderedTasks whenever filteredAndSortedTasks changes
   useEffect(() => {
-    setReorderedTasks([...filteredAndSortedTasks]);
-  }, [filteredAndSortedTasks]);
+    if (contextTaskOrder) {
+      const orderedTasks: Task[] = [];
+      contextTaskOrder.forEach((taskId) => {
+        const task = filteredAndSortedTasks.find((task) => task.id === taskId);
+        if (task) {
+          orderedTasks.push(task);
+        }
+      });
+      // Add any tasks not in taskOrder to the end
+      filteredAndSortedTasks.forEach((task) => {
+        if (!contextTaskOrder.includes(task.id!)) {
+          orderedTasks.push(task);
+        }
+      });
+      setReorderedTasks(orderedTasks);
+    } else {
+      setReorderedTasks([...filteredAndSortedTasks]);
+    }
+  }, [filteredAndSortedTasks, contextTaskOrder]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -341,7 +372,12 @@ export default function TaskList() {
       const newIndex = reorderedTasks.findIndex((task) => task.id === over.id);
 
       if (oldIndex !== -1 && newIndex !== -1) {
-        setReorderedTasks((tasks) => arrayMove(tasks, oldIndex, newIndex));
+        const newReorderedTasks = arrayMove(reorderedTasks, oldIndex, newIndex);
+        setReorderedTasks(newReorderedTasks);
+
+        // Update task order in context
+        const newTaskOrder = newReorderedTasks.map((task) => task.id!);
+        await updateTaskSorting(sortBy, sortOrder, newTaskOrder); // Save new order
       }
     }
   };
@@ -352,6 +388,17 @@ export default function TaskList() {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Function to update sorting preferences
+  const handleSortChange = async (newSortBy: "title" | "due_date") => {
+    setSortBy(newSortBy);
+    await updateTaskSorting(newSortBy, sortOrder, null);
+  };
+
+  const handleSortOrderChange = async (newSortOrder: "asc" | "desc") => {
+    setSortOrder(newSortOrder);
+    await updateTaskSorting(sortBy, newSortOrder, null);
+  };
 
   return (
     <div className="container mx-auto py-2">
@@ -516,7 +563,7 @@ export default function TaskList() {
           <Label htmlFor="sort">Sort by:</Label>
           <Select
             value={sortBy}
-            onValueChange={(value) => setSortBy(value as any)}
+            onValueChange={(value) => handleSortChange(value as any)}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Sort by" />
@@ -530,7 +577,9 @@ export default function TaskList() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            onClick={() =>
+              handleSortOrderChange(sortOrder === "asc" ? "desc" : "asc")
+            }
           >
             {sortOrder === "asc" ? "Ascending" : "Descending"}
           </Button>
