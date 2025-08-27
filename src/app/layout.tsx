@@ -5,6 +5,8 @@ import type { Metadata } from "next";
 import { TagProvider } from "@/contexts/TagContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { TaskSortProvider } from "@/contexts/TaskSortContext";
+import { TimeLogsProvider } from "@/contexts/TimeLogsContext";
+import { TimeLogTypeProvider } from "@/contexts/TimeLogTypeContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,7 +36,11 @@ export default function RootLayout({
       <body className="font-sans" style={{ fontFamily: "var(--font-inter)" }}>
         <TaskProvider>
           <TaskSortProvider>
-            <TagProvider>{children}</TagProvider>
+            <TagProvider>
+              <TimeLogsProvider>
+                <TimeLogTypeProvider>{children}</TimeLogTypeProvider>
+              </TimeLogsProvider>
+            </TagProvider>
           </TaskSortProvider>
         </TaskProvider>
         <Toaster />

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { HomeIcon, Settings, X } from "lucide-react"; // Assuming you're using Lucide Icons
+import { HomeIcon, Clock, Settings, X } from "lucide-react"; // Assuming you're using Lucide Icons
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { StarFilledIcon } from "@radix-ui/react-icons";
@@ -13,8 +13,13 @@ export default function Sidebar({ className, ...props }: any) {
   const routes = [
     {
       href: "/home",
-      label: "Home",
+      label: "Reminders",
       icon: HomeIcon,
+    },
+    {
+      href: "/time-logger",
+      label: "Time Logs",
+      icon: Clock,
     },
     {
       href: "/settings",

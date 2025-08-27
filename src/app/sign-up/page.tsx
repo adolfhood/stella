@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StarFilledIcon } from "@radix-ui/react-icons";
+import { setupAccount } from "@/lib/setup-account";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
@@ -42,13 +43,20 @@ export default function SignUpPage() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${location.origin}/api/auth/callback/route`,
-        },
       });
+
+      if (data.user) {
+        const { data: setupData, error: setupError } = await setupAccount(
+          data.user.id
+        );
+
+        if (setupError) {
+          setError(setupError.message);
+        }
+      }
 
       if (error) {
         setError(error.message);

@@ -1,0 +1,33 @@
+CREATE TABLE time_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  type TEXT NOT NULL,
+  comment TEXT,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE time_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Enable read access for users based on user_id" ON time_logs
+AS PERMISSIVE FOR SELECT
+TO authenticated
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Enable insert access for users based on user_id" ON time_logs
+AS PERMISSIVE FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable update access for users based on user_id" ON time_logs
+AS PERMISSIVE FOR UPDATE
+TO authenticated
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Enable delete access for users based on user_id" ON time_logs
+AS PERMISSIVE FOR DELETE
+TO authenticated
+USING (auth.uid() = user_id);
