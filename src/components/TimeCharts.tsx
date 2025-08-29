@@ -219,7 +219,7 @@ export default function TimeCharts({
   };
 
   return (
-    <div className="container mx-auto py-2">
+    <div className="py-2">
       <div className="flex justify-between items-end mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">
           Time Log Charts

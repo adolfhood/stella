@@ -20,7 +20,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Edit, Trash2, Search } from "lucide-react";
+import {
+  CalendarIcon,
+  Edit,
+  Trash2,
+  Search,
+  SortAsc,
+  SortDesc,
+  Plus,
+} from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
@@ -50,6 +58,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  PointerActivationConstraint,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -284,11 +293,11 @@ export default function TaskList() {
     }
   };
 
-  const handleSaveStatus = async (taskId: string, status: string) => {
+  const handleSaveStatus = async (task: Task, status: string) => {
     try {
-      if (editTask) {
+      if (task) {
         await updateTask({
-          ...editTask,
+          ...task,
           status: status,
         });
       }
@@ -384,7 +393,11 @@ export default function TaskList() {
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        delay: 100,
+      } as PointerActivationConstraint,
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -408,18 +421,29 @@ export default function TaskList() {
     [updateTaskSorting]
   );
 
+  const handleToggleRepeatModal = () => {
+    if (showRepeatModal) {
+      setShowRepeatModal(false);
+      setTaskForm({ ...taskForm, repeat_config: null });
+
+      if (editTask) {
+        setEditTask({ ...editTask, repeat_config: null });
+      }
+    } else {
+      setShowRepeatModal(true);
+    }
+  };
+
   return (
-    <div className="container mx-auto py-2">
+    <div className="py-2">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Tasks</h2>
         <div className="flex gap-2">
           <TagsDialog />
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button
-                className="bg-blue-500 hover:bg-blue-700 text-white"
-                onClick={handleOpenDialog}
-              >
+              <Button variant="default" onClick={handleOpenDialog}>
+                <Plus className="w-4 h-4 mr-1" />
                 Add Task
               </Button>
             </DialogTrigger>
@@ -460,7 +484,7 @@ export default function TaskList() {
                   <Label htmlFor="due_date" className="text-right">
                     Due Date
                   </Label>
-                  <Popover>
+                  <Popover modal>
                     <PopoverTrigger asChild>
                       <Button
                         variant={"outline"}
@@ -523,9 +547,9 @@ export default function TaskList() {
                   {/* Removed repeat interval select */}
                 </div>
               </div>
-              {/* <Button onClick={handleToggleRepeatModal}>
+              <Button onClick={handleToggleRepeatModal}>
                 {showRepeatModal ? "Clear Repeat" : "Set Repeat"}
-              </Button>{" "} */}
+              </Button>{" "}
               {/* Open Repeat Modal */}
               {showRepeatModal && (
                 <RepeatModal
@@ -583,14 +607,18 @@ export default function TaskList() {
           </Select>
 
           <Button
-            variant="outline"
+            variant="default"
             size="sm"
             onClick={() => {
               const newSortOrder = sortOrder === "asc" ? "desc" : "asc";
               handleSortOrderChange(newSortOrder);
             }}
           >
-            {sortOrder === "asc" ? "Ascending" : "Descending"}
+            {sortOrder === "asc" ? (
+              <SortAsc className="w-4 h-4" />
+            ) : (
+              <SortDesc className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -661,7 +689,7 @@ const TaskItem = ({
   statusColors,
 }: {
   task: Task;
-  handleSaveStatus: (taskId: string, status: string) => Promise<void>;
+  handleSaveStatus: (task: Task, status: string) => Promise<void>;
   handleEditTask: (task: Task) => void;
   setDeleteTaskId: (taskId: string) => void;
   setDeleteOpen: (open: boolean) => void;
@@ -693,7 +721,7 @@ const TaskItem = ({
                 checked={task.status === "completed"}
                 onCheckedChange={(checked) => {
                   const status = checked ? "completed" : "open";
-                  handleSaveStatus(task.id!, status);
+                  handleSaveStatus(task, status);
                 }}
                 className="h-6 w-6 rounded-full border-primary text-primary ring-offset-background focus-visible:ring-ring focus-visible:ring-offset-2"
               />
@@ -729,10 +757,10 @@ const TaskItem = ({
               </div>
             )}
           </div>
-          <div className="col-span-1">
+          {/* <div className="col-span-1">
             <Select
               value={task.status}
-              onValueChange={(status) => handleSaveStatus(task.id!, status)}
+              onValueChange={(status) => handleSaveStatus(task, status)}
             >
               <SelectTrigger className="w-full text-sm">
                 <SelectValue placeholder="Select a status" />
@@ -744,17 +772,17 @@ const TaskItem = ({
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
           <div className="col-span-1 flex justify-end space-x-1 absolute right-0 top-0">
             <Button
-              variant="ghost"
+              variant="secondary"
               size="icon"
               onClick={() => handleEditTask(task)}
             >
               <Edit className="h-4 w-4" />
             </Button>
             <Button
-              variant="ghost"
+              variant="destructive"
               size="icon"
               onClick={() => {
                 setDeleteTaskId(task.id!);

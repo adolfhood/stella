@@ -78,11 +78,11 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-100 text-gray-800">
+    <div className="flex flex-col min-h-screen bg-white text-gray-800">
       <Header />
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 sm:p-6">
+      <main className="flex-1 py-4 sm:py-6 app-width">
         <Tabs defaultValue="tasks" className="w-full">
           <TabsList className="flex flex-wrap md:flex-nowrap h-max gap-1 sm:space-x-4 p-1 rounded-md shadow-sm">
             <TabsTrigger

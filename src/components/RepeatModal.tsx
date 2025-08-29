@@ -112,7 +112,7 @@ export default function RepeatModal({ onSave, onCancel }: RepeatModalProps) {
 
       <div>
         <Label className="mb-2">Starts</Label>
-        <Popover>
+        <Popover modal>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
@@ -155,7 +155,7 @@ export default function RepeatModal({ onSave, onCancel }: RepeatModalProps) {
             />
             <Label htmlFor="endsOn">On</Label>
             {ends === "on" && (
-              <Popover>
+              <Popover modal>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}

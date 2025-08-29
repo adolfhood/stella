@@ -411,7 +411,7 @@ export default function TimeLogList({
   };
 
   return (
-    <div className="container mx-auto py-2">
+    <div className="py-2">
       <div className="flex justify-between items-end mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Time Logs</h2>
         <div className="flex flex-row items-center justify-between gap-2">

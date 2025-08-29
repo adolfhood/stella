@@ -43,7 +43,7 @@ export default function DailyTaskList({
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="py-10">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <Button variant="ghost" size="sm" onClick={handlePrevDay}>

@@ -54,14 +54,14 @@ const TimeLogCard = ({
             </div>
             <div className="flex space-x-1">
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="icon"
                 onClick={() => onEdit(timeLog)}
               >
                 <Edit className="h-4 w-4" />
               </Button>
               <Button
-                variant="ghost"
+                variant="destructive"
                 size="icon"
                 onClick={() => {
                   setDeleteTimeLogId(timeLog.id);

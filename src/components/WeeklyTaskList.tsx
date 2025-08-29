@@ -58,7 +58,7 @@ export default function WeeklyTaskList({ tasks }: WeeklyTaskListProps) {
   };
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="py-10">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <Button variant="outline" size="icon" onClick={goToPreviousWeek}>
