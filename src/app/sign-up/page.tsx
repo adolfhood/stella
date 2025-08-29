@@ -71,48 +71,59 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="grid h-screen place-items-center p-4 bg-neutral-200">
-      <Card className="w-full max-w-[450px]">
-        <CardHeader className="flex flex-col items-center">
-          <CardTitle className="text-3xl font-bold text-primary mb-2 flex justify-center items-center gap-1">
-            <StarFilledIcon /> Stella
+    <div className="grid h-screen bg-primary relative">
+      <div className="mt-4 px-6">
+        <h1 className="text-2xl font-bold text-primary-foreground flex justify-end">
+          <StarFilledIcon /> Stellast
+        </h1>
+      </div>
+      <div className="px-6 h-[40vh] max-h-[40vh]">
+        <img
+          src="/undraw/undraw_lightbulb-moment_16av.svg"
+          className="w-full h-full"
+        />
+      </div>
+      <Card className="w-full rounded-b-none border-0 bg-white gap-2">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-primary">
+            Sign Up
           </CardTitle>
-          <CardDescription>Create an account to get started</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="rounded-b-none">
           {error && <p className="text-red-500">{error}</p>}
-          <form onSubmit={handleSignUp} className="space-y-4">
+          <form onSubmit={handleSignUp} className="space-y-2">
             <div>
-              <Label className="mb-2" htmlFor="email">
-                Email
-              </Label>
               <Input
+                placeholder="Email"
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="text-xs py-6 px-4 rounded-2xl"
               />
             </div>
             <div>
-              <Label className="mb-2" htmlFor="password">
-                Password
-              </Label>
               <Input
+                placeholder="Password"
                 type="password"
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-xs py-6 px-4 rounded-2xl"
               />
             </div>
-            <Button disabled={loading} className="w-full">
+            <Button
+              disabled={loading}
+              className="w-full py-6 rounded-4xl mt-2 text-primary-foreground"
+            >
               {loading ? "Signing up..." : "Sign Up"}
             </Button>
           </form>
-          <p className="text-sm mt-4">
+          <p className="text-sm mt-4 text-center">
             Already have an account?{" "}
-            <Link href="/login" className="text-blue-500">
+            <Link href="/login" className="text-primary">
               Login
             </Link>
           </p>

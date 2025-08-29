@@ -22,6 +22,7 @@ import Footer from "@/components/Footer";
 
 import { Task } from "@/types/Task";
 import LoadingComponent from "@/components/LoadingComponent";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function HomePage() {
   const [session, setSession] = useState<any>(null);
@@ -85,10 +86,10 @@ export default function HomePage() {
       {/* Main Content Area */}
       <main className="flex-1 py-4 sm:py-6 app-width">
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="flex flex-wrap md:flex-nowrap h-max gap-1 sm:space-x-4 p-1 rounded-md shadow-sm">
+          <TabsList className="flex flex-wrap md:flex-nowrap h-max gap-1 sm:space-x-4 p-1 rounded-md shadow-sm bg-gray-200">
             <TabsTrigger
               value="tasks"
-              className="text-sm sm:text-base whitespace-nowrap justify-start"
+              className="text-sm sm:text-base whitespace-nowrap justify-start data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground"
             >
               <ListChecks className="mr-2 h-4 w-4" />
               Tasks
@@ -115,16 +116,20 @@ export default function HomePage() {
               Daily
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="tasks" className="mt-2">
-            <TaskList />
+          <TabsContent value="tasks">
+            <Card>
+              <CardContent>
+                <TaskList />
+              </CardContent>
+            </Card>
           </TabsContent>
-          <TabsContent value="calendar" className="mt-2">
+          <TabsContent value="calendar">
             <TaskCalendar tasks={tasks} />
           </TabsContent>
-          <TabsContent value="weekly" className="mt-2">
+          <TabsContent value="weekly">
             <WeeklyTaskList tasks={tasks} />
           </TabsContent>
-          <TabsContent value="daily" className="mt-2">
+          <TabsContent value="daily">
             <DailyTaskList
               selectedDate={selectedDate}
               tasks={tasks}

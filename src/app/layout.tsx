@@ -21,7 +21,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "Stella Bot",
+  title: "Stellast",
   description: "A powerful AI assistant for your daily tasks",
   manifest: "/manifest.json",
 };
@@ -33,7 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
-      <body className="font-sans" style={{ fontFamily: "var(--font-inter)" }}>
+      <body style={{ fontFamily: "var(--font-inter)" }}>
         <TaskProvider>
           <TaskSortProvider>
             <TagProvider>

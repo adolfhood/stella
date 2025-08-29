@@ -43,10 +43,9 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* PALETTE 1: Muted Blues and Greens */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.96 0.005 252);
+  --background: oklch(100% 0.00011 271.152);
   --foreground: oklch(0.2 0.01 252);
   --card: oklch(0.96 0.005 252);
   --card-foreground: oklch(0.2 0.01 252);

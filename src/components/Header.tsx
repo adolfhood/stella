@@ -78,7 +78,7 @@ export default function Header() {
             className="text-primary-foreground text-xl font-semibold flex items-center space-x-1"
           >
             <StarFilledIcon />
-            <span>Stella</span>
+            <span>Stellast</span>
           </Link>
         </div>
 

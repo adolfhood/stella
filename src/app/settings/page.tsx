@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import LoadingComponent from "@/components/LoadingComponent";
 
 const characterOptions = [
-  { value: "0", label: "Stella" },
+  { value: "0", label: "Stellast" },
   { value: "1", label: "Motivatron 5000" },
   { value: "2", label: "Sarcastic Sammy" },
   { value: "3", label: "Zen Master Zennith" },

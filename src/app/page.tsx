@@ -32,7 +32,7 @@ export default function Home() {
       <section className="bg-gradient-to-r from-blue-50 to-white py-20">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl font-extrabold text-gray-800 mb-6">
-            Supercharge Your Productivity with Stella
+            Supercharge Your Productivity with Stellast
           </h1>
           <p className="text-lg text-gray-600 mb-8">
             Your friendly daily task bot, designed to keep you organized and
@@ -49,7 +49,7 @@ export default function Home() {
         <Card className="w-full max-w-md shadow-xl rounded-lg">
           <CardHeader className="py-6">
             <CardTitle className="text-2xl font-bold text-center">
-              Stay Updated with Stella!
+              Stay Updated with Stellast!
             </CardTitle>
             <CardDescription className="text-gray-500 text-center">
               Subscribe to our newsletter for the latest updates and tips.
@@ -107,7 +107,7 @@ export default function Home() {
                 Customizable Settings
               </h3>
               <p className="text-gray-600">
-                Tailor Stella to fit your unique workflow.
+                Tailor Stellast to fit your unique workflow.
               </p>
             </div>
           </div>

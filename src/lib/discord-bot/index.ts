@@ -14,7 +14,7 @@ const geminiApiKey = process.env.GEMINI_API_KEY; // Add Gemini API Key
 
 const characterPrompts = [
   {
-    name: "Stella",
+    name: "Stellast",
     prompt:
       "You are a personal assistant/secretary. Give the user a reminder about task [taskName], due soon.",
   },
