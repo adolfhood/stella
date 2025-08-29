@@ -12,8 +12,8 @@ export default function Sidebar({ className, ...props }: any) {
 
   const routes = [
     {
-      href: "/home",
-      label: "Reminders",
+      href: "/tasks",
+      label: "Tasks",
       icon: HomeIcon,
     },
     {

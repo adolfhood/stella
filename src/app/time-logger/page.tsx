@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TimeLogList from "@/components/TimeLogList";
 import TimeCharts from "@/components/TimeCharts";
+import LoadingComponent from "@/components/LoadingComponent";
 
 export default function TimeLoggerPage() {
   const [session, setSession] = useState<any>(null);
@@ -26,7 +27,7 @@ export default function TimeLoggerPage() {
   }, []);
 
   if (!session) {
-    return <p>Loading...</p>;
+    return <LoadingComponent />;
   }
 
   return (

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
+import LoadingComponent from "@/components/LoadingComponent";
 
 const characterOptions = [
   { value: "0", label: "Stella" },
@@ -131,7 +132,7 @@ export default function SettingsPage() {
   };
 
   if (!session) {
-    return <p>Loading...</p>;
+    return <LoadingComponent />;
   }
 
   return (
