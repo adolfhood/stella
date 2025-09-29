@@ -1,0 +1,69 @@
+**Tasks Functionality**
+Done:
+- Add tasks status (completed or not yet) ✅
+- Add calendar display ✅
+- Add weekly display ✅
+- Add daily display ✅
+- Remove data requesting on calendar, weekly and daily displays (add it to page instead) ✅
+- Add day selection on daily view ✅
+- DRY code ✅
+- Do not show sidebar when not logged in ✅
+- Add logout button when logged in ✅
+- Login button color ✅
+- Redirect to /home on login/sign up ✅
+- Create as PWA ✅
+- Add checkbox to mark as complete ✅
+- Add repeat functionality ✅
+  - Add migration ✅
+  - Create test cases ✅
+  - Update cron logic ✅
+- Add normal reminders ✅
+- Add tags functionality ✅
+- Make task functionality into a context ✅
+- Add supabase channels for task and tags ✅
+- Make task and tags auto-update ✅
+- Add search and sort ✅
+- Fix sorting issue ✅
+- Add custom sort via drag and drop ✅
+- Update sidebar name to Tasks ✅
+- Change page name to /tasks ✅
+- Create a new home page ✅
+- Add a loader component ✅
+- Remove clutter on design ✅
+- Get a luxury color palette ✅
+- Make it mobile-friendly ✅
+  - / ✅
+  - /home ✅
+  - /settings ✅
+  - /login ✅
+  - /sign-up ✅
+- Create a script to run the cron-job ✅
+- Create build script via GitHub actions ✅
+- Get creative task messages ✅
+- Create setting for tone/characters for reminders ✅
+- Add reminders ✅
+- Add 5 minute before reminders ✅
+- Add 15 minute before reminders ✅
+
+**Time Logger**
+Done:
+- Add modal
+  - Type ✅
+  - From Date ✅
+  - From Time ✅
+  - To Date ✅
+  - To Time ✅
+- Add a view for today ✅
+- Add a view for weekly ✅ 
+- Add a view for monthly ✅
+- Add a view for yearly ✅
+- Add icons to choose from ✅
+- Ability to add task types ✅
+- Update migration for task types ✅
+- Show icons ✅
+- Change time picker to clock picker ✅
+- Change input to calendar picker ✅
+- Change process to clicking the button, open calendar then open clock ✅
+- Add validation ✅
+- Add charts and graphs ✅
+- Add default types ✅
