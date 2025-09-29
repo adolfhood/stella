@@ -7,6 +7,7 @@ import { TaskProvider } from "@/contexts/TaskContext";
 import { TaskSortProvider } from "@/contexts/TaskSortContext";
 import { TimeLogsProvider } from "@/contexts/TimeLogsContext";
 import { TimeLogTypeProvider } from "@/contexts/TimeLogTypeContext";
+import { MoneyItemProvider } from "@/contexts/MoneyItemContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,7 +39,9 @@ export default function RootLayout({
           <TaskSortProvider>
             <TagProvider>
               <TimeLogsProvider>
-                <TimeLogTypeProvider>{children}</TimeLogTypeProvider>
+                <TimeLogTypeProvider>
+                  <MoneyItemProvider>{children}</MoneyItemProvider>
+                </TimeLogTypeProvider>
               </TimeLogsProvider>
             </TagProvider>
           </TaskSortProvider>

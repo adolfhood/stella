@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { HomeIcon, Clock, Settings, X } from "lucide-react"; // Assuming you're using Lucide Icons
+import { HomeIcon, Clock, Settings, X, PiggyBank, Banknote } from "lucide-react"; // Assuming you're using Lucide Icons
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { StarFilledIcon } from "@radix-ui/react-icons";
@@ -20,6 +20,11 @@ export default function Sidebar({ className, ...props }: any) {
       href: "/time-logger",
       label: "Time Logs",
       icon: Clock,
+    },
+    {
+      href: "/money-manager",
+      label: "Money Management",
+      icon: Banknote,
     },
     {
       href: "/settings",
